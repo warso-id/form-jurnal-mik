@@ -1722,6 +1722,7 @@
             // 1. Deploy script Google Apps Script sebagai Web App
             // 2. Salin URL-nya (contoh: https://script.google.com/macros/s/.../exec)
             // 3. Tempel di bawah ini
+            // =====================================================
             const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzB4tC8orkXikr119vgVh3EC7ZCmLlFmGXWGvgg2erhH80__O_jxvKqWuG8G82uZiRsng/exec"; // <-- GANTI DENGAN URL DEPLOYMENT ANDA
 
             // =====================================================
@@ -2148,7 +2149,7 @@
             document.getElementById('step4Prev').addEventListener('click', function() { goToStep(3); });
 
             // =====================================================
-            // FORM SUBMIT — FETCH TO WEB APP
+            // FORM SUBMIT — FETCH TO WEB APP (DENGAN PENANGANAN ERROR LEBIH BAIK)
             // =====================================================
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2205,7 +2206,7 @@
                 submitBtn.classList.add('loading');
                 hideMessage();
 
-                // Kirim ke Web App
+                // Kirim ke Web App dengan penanganan error yang lebih baik
                 fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'cors',
@@ -2215,8 +2216,8 @@
                     body: JSON.stringify(data)
                 })
                 .then(response => {
+                    // Jika response tidak OK (status 4xx/5xx), baca sebagai teks
                     if (!response.ok) {
-                        // Jika status bukan 2xx, kita coba baca error message dari response
                         return response.text().then(text => {
                             let errMsg = 'HTTP ' + response.status;
                             try {
@@ -2238,7 +2239,7 @@
                         form.style.display = 'none';
                         resultContainer.classList.remove('hidden');
                         resultRegId.textContent = result.regId;
-                        // Jika QR code tersedia, tampilkan; jika tidak, sembunyikan kontainer
+                        // Jika QR code tersedia, tampilkan; jika tidak, sembunyikan
                         if (result.qrCode) {
                             resultQrCode.src = result.qrCode;
                             resultQrCode.style.display = 'block';
@@ -2250,6 +2251,7 @@
                             'Artikel berhasil terdaftar. Simpan nomor registrasi Anda.'
                         );
                     } else {
+                        // Jika result.success false atau tidak ada success
                         showMessage('error', 'Gagal Menyimpan Data',
                             result.error || 'Terjadi kesalahan saat menyimpan. Silakan coba lagi.'
                         );
@@ -2259,9 +2261,14 @@
                     isSubmitting = false;
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('loading');
-                    showMessage('error', 'Error Server',
-                        error.message || 'Gagal terhubung ke server. Periksa URL Web App.'
-                    );
+
+                    // Tampilkan pesan error yang detail
+                    let errorMsg = error.message || 'Gagal terhubung ke server.';
+                    // Tambahkan saran jika "Failed to fetch"
+                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                        errorMsg += ' Periksa URL Web App, akses jaringan, dan pastikan Web App di-deploy dengan akses "Anyone".';
+                    }
+                    showMessage('error', 'Error Server', errorMsg);
                     console.error('Fetch error:', error);
                 });
             });
@@ -2403,8 +2410,8 @@
             console.log('📝 All fields are optional — submit with any data.');
             console.log('🔗 Web App URL:', APP_SCRIPT_URL);
 
-            // Peringatan jika URL masih default
-            if (APP_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbzB4tC8orkXikr119vgVh3EC7ZCmLlFmGXWGvgg2erhH80__O_jxvKqWuG8G82uZiRsng/exec") {
+            // Peringatan jika URL masih contoh
+            if (APP_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbx5jD5OW315MIAaCaFxuwTeUKUOEMGozAJjsn580Ia-WXkwy0wPh-GlGP5_ikoH3uu5Zw/exec") {
                 console.warn('⚠️ APP_SCRIPT_URL masih menggunakan contoh. Ganti dengan URL deployment Anda sendiri!');
             }
 
