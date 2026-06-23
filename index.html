@@ -2144,7 +2144,7 @@
             document.getElementById('step4Prev').addEventListener('click', function() { goToStep(3); });
 
             // =====================================================
-            // FORM SUBMIT — DENGAN TIMEOUT DAN RETRY
+            // FORM SUBMIT — PERBAIKAN DENGAN ABORTCONTROLLER DAN RETRY
             // =====================================================
             async function submitWithRetry(data, maxRetries = 2) {
                 let lastError = null;
@@ -2153,7 +2153,6 @@
                     try {
                         console.log(`🔄 Percobaan ${attempt} dari ${maxRetries}...`);
 
-                        // Buat AbortController untuk timeout 30 detik
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -2165,20 +2164,19 @@
                             },
                             body: JSON.stringify(data),
                             signal: controller.signal,
-                            credentials: 'omit'  // tidak mengirim cookie
+                            credentials: 'omit'
                         });
 
                         clearTimeout(timeoutId);
 
                         if (!response.ok) {
-                            // Coba baca response sebagai teks
-                            const text = await response.text();
                             let errMsg = 'HTTP ' + response.status;
                             try {
-                                const json = JSON.parse(text);
+                                const json = await response.json();
                                 if (json.error) errMsg = json.error;
                             } catch (e) {
-                                errMsg = text || errMsg;
+                                const text = await response.text();
+                                if (text && text.length < 200) errMsg = text;
                             }
                             throw new Error(errMsg);
                         }
@@ -2190,9 +2188,8 @@
                         lastError = error;
                         console.warn(`⚠️ Percobaan ${attempt} gagal:`, error.message);
 
-                        // Jika bukan percobaan terakhir, tunggu 2 detik sebelum retry
                         if (attempt < maxRetries) {
-                            console.log(`⏳ Menunggu 2 detik sebelum mencoba ulang...`);
+                            console.log('⏳ Menunggu 2 detik sebelum mencoba ulang...');
                             await new Promise(resolve => setTimeout(resolve, 2000));
                         }
                     }
@@ -2206,13 +2203,11 @@
 
                 if (isSubmitting) return;
 
-                // Validate step 4
                 if (!validateStep4()) {
                     showMessage('error', 'Validasi Gagal', 'Periksa kembali field yang ditandai.');
                     return;
                 }
 
-                // Cek apakah ada data
                 const hasData = document.getElementById('namaLengkap').value.trim() ||
                     document.getElementById('nim').value.trim() ||
                     document.getElementById('email').value.trim() ||
@@ -2256,7 +2251,6 @@
                 submitBtn.classList.add('loading');
                 hideMessage();
 
-                // Kirim dengan retry mechanism
                 submitWithRetry(data, 2)
                     .then(result => {
                         isSubmitting = false;
@@ -2289,18 +2283,19 @@
                         submitBtn.classList.remove('loading');
 
                         let errorMsg = error.message || 'Gagal terhubung ke server.';
-
-                        // Deteksi error spesifik
                         if (error.name === 'AbortError') {
                             errorMsg = 'Permintaan timeout (30 detik). Periksa koneksi internet dan URL Web App.';
                         } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                            errorMsg = 'Tidak dapat terhubung ke server. Pastikan:\n' +
-                                '1. URL Web App benar dan aktif\n' +
-                                '2. Web App di-deploy dengan akses "Anyone"\n' +
-                                '3. Koneksi internet stabil\n' +
-                                '4. Tidak ada firewall/proxy yang memblokir';
+                            errorMsg =
+                                '❌ Tidak dapat terhubung ke server.\n\n' +
+                                'SOLUSI:\n' +
+                                '1. Pastikan Web App di-deploy dengan akses "Anyone"\n' +
+                                '2. Buka URL berikut di browser terlebih dahulu:\n' +
+                                '   ' + APP_SCRIPT_URL + '\n\n' +
+                                '3. Jika muncul pesan error, periksa kembali URL\n' +
+                                '4. Jika muncul JSON sukses, refresh halaman ini lalu coba lagi\n' +
+                                '5. Periksa koneksi internet dan firewall';
                         }
-
                         showMessage('error', 'Error Server', errorMsg);
                         console.error('❌ Fetch error:', error);
                     });
@@ -2353,15 +2348,36 @@
             // =====================================================
             goToStep(1);
 
-            // Cek URL Web App saat load
-            if (!APP_SCRIPT_URL || !APP_SCRIPT_URL.startsWith('https://script.google.com/macros/s/')) {
-                console.warn('⚠️ APP_SCRIPT_URL tidak valid. Pastikan URL Web App benar.');
-                showMessage('info', 'Periksa Konfigurasi',
-                    'APP_SCRIPT_URL belum diatur dengan benar. Silakan cek file HTML.'
-                );
+            // Cek koneksi ke Web App saat halaman dimuat (GET)
+            if (APP_SCRIPT_URL && APP_SCRIPT_URL.startsWith('https://script.google.com/macros/s/')) {
+                fetch(APP_SCRIPT_URL, {
+                    method: 'GET',
+                    credentials: 'omit'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.success) {
+                        console.log('✅ Koneksi ke Web App berhasil.');
+                        showMessage('info', 'Selamat Datang',
+                            'Silakan isi formulir. Semua field bersifat opsional — isi sesuai kebutuhan Anda.'
+                        );
+                    } else {
+                        console.warn('⚠️ Web App merespon tetapi tidak sukses:', data);
+                        showMessage('info', 'Periksa Konfigurasi',
+                            'Web App merespon tetapi ada masalah. Periksa kembali URL dan deployment.'
+                        );
+                    }
+                })
+                .catch(error => {
+                    console.warn('⚠️ Tidak dapat mengakses Web App:', error.message);
+                    showMessage('error', 'Koneksi Gagal',
+                        'Tidak dapat terhubung ke Web App. Periksa URL dan pastikan Web App di-deploy dengan akses "Anyone".'
+                    );
+                });
             } else {
-                showMessage('info', 'Selamat Datang',
-                    'Silakan isi formulir. Semua field bersifat opsional — isi sesuai kebutuhan Anda.'
+                console.warn('⚠️ APP_SCRIPT_URL tidak valid.');
+                showMessage('error', 'Konfigurasi Error',
+                    'APP_SCRIPT_URL tidak valid. Silakan periksa file HTML dan ganti dengan URL Web App yang benar.'
                 );
             }
 
