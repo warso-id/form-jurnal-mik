@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>Monitoring Publikasi Jurnal</title>
+
+    <!-- ========== PDF.js Library ========== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <!-- ========== Mammoth.js (untuk DOCX) ========== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
     <style>
         /* =====================================================
            ROOT VARIABLES
@@ -593,87 +600,193 @@
             color: var(--text-muted);
         }
 
-        .file-preview .file-remove {
+        .file-preview .file-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .file-preview .file-remove,
+        .file-preview .file-preview-btn {
             background: none;
             border: none;
-            color: var(--error);
-            font-size: 1.2rem;
             cursor: pointer;
             padding: 4px 8px;
             border-radius: 6px;
             transition: background var(--transition);
-            flex-shrink: 0;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .file-preview .file-remove {
+            color: var(--error);
+        }
+        .file-preview .file-preview-btn {
+            color: var(--primary);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
 
         .file-preview .file-remove:hover {
             background: rgba(198, 40, 40, 0.08);
         }
+        .file-preview .file-preview-btn:hover {
+            background: rgba(26, 35, 126, 0.08);
+        }
 
         /* =====================================================
-           JOURNAL GUIDE CARD
+           CAROUSEL (PANDUAN PENULISAN JURNAL)
         ===================================================== */
-        .journal-guide {
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            margin: 20px 0 28px;
             background: #f8faff;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            padding: 18px 20px;
-            margin-top: 4px;
-            border-left: 4px solid var(--primary-light);
-            transition: all var(--transition);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(26, 35, 126, 0.06);
         }
 
-        .journal-guide:hover {
-            border-left-color: var(--primary);
-            background: #f0f6ff;
+        .carousel-slides {
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
         }
 
-        .journal-guide p {
-            margin-bottom: 6px;
-            font-size: 0.92rem;
-            color: var(--text-primary);
-            line-height: 1.7;
+        .carousel-slide {
+            min-width: 100%;
+            padding: 24px 28px;
+            background: #f8faff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
-        .journal-guide p:last-child {
-            margin-bottom: 0;
+        .carousel-slide .guide-icon {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
         }
 
-        .journal-guide .guide-label {
-            font-weight: 700;
+        .carousel-slide h3 {
+            font-size: 1.1rem;
             color: var(--primary);
+            margin-bottom: 8px;
+            font-weight: 700;
         }
 
-        .journal-guide .template-link {
-            display: inline-block;
-            margin-top: 2px;
-            font-weight: 600;
+        .carousel-slide p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 6px;
         }
 
-        .journal-guide a {
+        .carousel-slide a {
             color: var(--primary-light);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
             transition: color var(--transition);
-            word-break: break-all;
         }
 
-        .journal-guide a:hover {
+        .carousel-slide a:hover {
             color: var(--primary);
             text-decoration: underline;
         }
 
-        .journal-guide .guide-icon {
-            font-size: 1.2rem;
-            margin-right: 4px;
+        .carousel-slide .btn-link {
+            display: inline-block;
+            margin-top: 8px;
+            background: var(--primary-gradient);
+            color: #fff !important;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all var(--transition);
         }
 
-        .journal-guide .full-link {
-            display: block;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border);
-            font-size: 0.82rem;
-            word-break: break-all;
+        .carousel-slide .btn-link:hover {
+            background: var(--primary-dark);
+            text-decoration: none;
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 0 16px;
+            background: #f8faff;
+        }
+
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            cursor: pointer;
+            transition: background var(--transition);
+            border: none;
+            outline: none;
+        }
+
+        .carousel-dot.active {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+
+        .carousel-arrows {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+            pointer-events: none;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .carousel-arrow {
+            background: rgba(255, 255, 255, 0.85);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary);
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all var(--transition);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+
+        .carousel-arrow:hover {
+            background: rgba(255,255,255,1);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+        }
+
+        .carousel-arrow:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 480px) {
+            .carousel-slide {
+                padding: 18px 16px;
+            }
+            .carousel-arrow {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
         }
 
         /* =====================================================
@@ -923,7 +1036,225 @@
         }
 
         /* =====================================================
-           RESPONSIVE
+           PREVIEW MODAL
+        ===================================================== */
+        .preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .preview-modal.hidden {
+            display: none;
+        }
+
+        .preview-modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-hover);
+            overflow: hidden;
+        }
+
+        .preview-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .preview-modal-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preview-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+            padding: 0 4px;
+            transition: color var(--transition);
+        }
+
+        .preview-modal-close:hover {
+            color: var(--error);
+        }
+
+        /* Container scrollable untuk semua halaman PDF */
+        .preview-item {
+            overflow: auto;
+            height: 70vh;
+            padding: 20px;
+            flex: 1;
+            background: #f5f5f5;
+        }
+
+        /* Halaman PDF */
+        .preview-item .pdf-page {
+            margin-bottom: 20px;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .preview-item .pdf-page canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .preview-item .pdf-page .page-label {
+            text-align: center;
+            padding: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: #fafafa;
+            border-top: 1px solid #eee;
+        }
+
+        /* Gambar */
+        .preview-item img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* TXT */
+        .preview-item pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            background: #fff;
+            padding: 20px;
+            border-radius: var(--radius-xs);
+            line-height: 1.6;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        /* DOCX hasil render */
+        .preview-item .docx-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: var(--radius-xs);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .preview-item .docx-content h1,
+        .preview-item .docx-content h2,
+        .preview-item .docx-content h3 {
+            margin: 16px 0 8px;
+            color: var(--primary);
+        }
+
+        .preview-item .docx-content p {
+            margin-bottom: 10px;
+        }
+
+        .preview-item .docx-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .preview-item .docx-content table td,
+        .preview-item .docx-content table th {
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+        }
+
+        /* Loading spinner di modal */
+        .preview-item .preview-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .preview-item .preview-loading .spinner {
+            width: 36px;
+            height: 36px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 12px;
+        }
+
+        /* Error dalam preview */
+        .preview-item .preview-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--error);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .preview-item .preview-error .error-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        /* RESPONSIVE MODAL */
+        @media (max-width: 480px) {
+            .preview-modal {
+                padding: 10px;
+            }
+            .preview-modal-content {
+                max-height: 95vh;
+            }
+            .preview-item {
+                height: 65vh;
+                padding: 12px;
+            }
+            .preview-modal-title {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* =====================================================
+           RESPONSIVE (umum)
         ===================================================== */
 
         /* --- Tablet & small laptop --- */
@@ -982,11 +1313,8 @@
                 padding: 20px 12px;
             }
 
-            .journal-guide {
-                padding: 14px 16px;
-            }
-            .journal-guide p {
-                font-size: 0.85rem;
+            .file-preview .file-actions {
+                gap: 4px;
             }
         }
 
@@ -1113,6 +1441,11 @@
             .file-preview .file-name {
                 font-size: 0.8rem;
             }
+            .file-preview .file-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 6px;
+            }
 
             .btn {
                 padding: 12px 18px;
@@ -1155,16 +1488,6 @@
 
             .section-divider {
                 margin: 18px 0 14px;
-            }
-
-            .journal-guide {
-                padding: 12px 14px;
-            }
-            .journal-guide p {
-                font-size: 0.8rem;
-            }
-            .journal-guide .full-link {
-                font-size: 0.75rem;
             }
         }
 
@@ -1297,15 +1620,50 @@
                 background: #1a1a2e;
             }
 
-            .journal-guide {
+            .carousel-container,
+            .carousel-slide,
+            .carousel-dots {
                 background: #1a1a32;
                 border-color: #2a2a44;
             }
-            .journal-guide:hover {
-                background: #1a1a3e;
+
+            .carousel-dot {
+                background: #3a3a5a;
             }
-            .journal-guide .full-link {
-                border-color: #2a2a44;
+
+            .carousel-dot.active {
+                background: var(--primary);
+            }
+
+            .carousel-arrow {
+                background: rgba(30,30,50,0.9);
+                color: #c0c0e0;
+            }
+
+            .preview-item {
+                background: #0d0d1a;
+            }
+            .preview-item .pdf-page {
+                background: #1a1a2e;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+            }
+            .preview-item .pdf-page .page-label {
+                background: #12121e;
+                border-top-color: #2a2a44;
+            }
+            .preview-item pre {
+                background: #12121e;
+                color: #e8e8f0;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            }
+            .preview-item .docx-content {
+                background: #12121e;
+                color: #e8e8f0;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            }
+            .preview-item .docx-content table td,
+            .preview-item .docx-content table th {
+                border-color: #3a3a5a;
             }
         }
 
@@ -1314,7 +1672,9 @@
             .app-header,
             .btn-group,
             .file-upload-area,
-            .progress-wrapper {
+            .progress-wrapper,
+            .preview-modal,
+            .carousel-container {
                 display: none !important;
             }
             .form-card {
@@ -1401,13 +1761,63 @@
             <form id="mainForm" novalidate autocomplete="on">
 
                 <!-- =====================================================
-                STEP 1 – DATA DIRI
+                STEP 1 – DATA DIRI & PANDUAN PENULISAN JURNAL
                 ===================================================== -->
                 <div class="form-section active" data-section="1" role="tabpanel" aria-label="Data Diri">
                     <h2 class="section-title">
                         <span class="step-num">1</span> Data Diri
                     </h2>
                     <p class="section-sub">Lengkapi identitas penulis utama (opsional).</p>
+
+                    <!-- =====================================================
+                    CAROUSEL PANDUAN PENULISAN JURNAL
+                    ===================================================== -->
+                    <div class="carousel-container" aria-roledescription="carousel" aria-label="Panduan Penulisan Jurnal">
+                        <div class="carousel-slides" id="carouselSlides">
+                            <!-- Slide 1 -->
+                            <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="Slide 1 dari 3">
+                                <span class="guide-icon">📌</span>
+                                <h3>Panduan Penulisan Jurnal</h3>
+                                <p>Buat artikel Jurnal mengikuti guidelines berikut:</p>
+                                <p><strong>INSTRUCTIONS FOR AUTHORS JURNAL PUSTAKA KOMUNIKASI</strong></p>
+                            </div>
+                            <!-- Slide 2 -->
+                            <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="Slide 2 dari 3">
+                                <span class="guide-icon">📄</span>
+                                <h3>Unduh Template Artikel</h3>
+                                <p>Gunakan template resmi untuk memformat artikel Anda.</p>
+                                <a href="https://docs.google.com/document/d/1VJkAaWNYhIMYZ5HpUjRXY0Xmk6wfcrVd/edit"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="btn-link">
+                                   ⬇️ Download Template
+                                </a>
+                            </div>
+                            <!-- Slide 3 -->
+                            <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="Slide 3 dari 3">
+                                <span class="guide-icon">🔗</span>
+                                <h3>Panduan Lengkap Online</h3>
+                                <p>Baca seluruh ketentuan dan panduan di situs resmi jurnal:</p>
+                                <a href="https://journal.moestopo.ac.id/index.php/pustakom/about/submissions#authorGuidelines"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="btn-link">
+                                   🌐 Buka Panduan Lengkap
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Dots -->
+                        <div class="carousel-dots" id="carouselDots">
+                            <button class="carousel-dot active" data-slide="0" aria-label="Slide 1"></button>
+                            <button class="carousel-dot" data-slide="1" aria-label="Slide 2"></button>
+                            <button class="carousel-dot" data-slide="2" aria-label="Slide 3"></button>
+                        </div>
+                        <!-- Arrows -->
+                        <div class="carousel-arrows">
+                            <button class="carousel-arrow" id="carouselPrev" aria-label="Slide sebelumnya">❮</button>
+                            <button class="carousel-arrow" id="carouselNext" aria-label="Slide berikutnya">❯</button>
+                        </div>
+                    </div>
 
                     <div class="form-group">
                         <label for="namaLengkap">Nama Lengkap <span class="optional">(opsional)</span></label>
@@ -1540,40 +1950,6 @@
                     </h2>
                     <p class="section-sub">Unggah dokumen dan masukkan detail jurnal (semua opsional).</p>
 
-                    <!-- =====================================================
-                    JOURNAL GUIDE
-                    ===================================================== -->
-                    <div class="form-group">
-                        <label>📖 Panduan Penulisan Jurnal</label>
-                        <div class="journal-guide">
-                            <p>
-                                <span class="guide-icon">📌</span>
-                                <span class="guide-label">Buat artikel Jurnal mengikuti guidelines berikut :</span>
-                            </p>
-                            <p>
-                                <strong>INSTRUCTIONS FOR AUTHORS JURNAL PUSTAKA KOMUNIKASI</strong>
-                                <br />
-                                <span class="template-link">📄 Template :</span>
-                                <a href="https://docs.google.com/document/d/1VJkAaWNYhIMYZ5HpUjRXY0Xmk6wfcrVd/edit"
-                                   target="_blank"
-                                   rel="noopener noreferrer">
-                                   Download Template
-                                </a>
-                            </p>
-                            <p class="full-link">
-                                <span>🔗 </span>
-                                <a href="https://journal.moestopo.ac.id/index.php/pustakom/about/submissions#authorGuidelines"
-                                   target="_blank"
-                                   rel="noopener noreferrer">
-                                   https://journal.moestopo.ac.id/index.php/pustakom/about/submissions#authorGuidelines
-                                </a>
-                            </p>
-                        </div>
-                        <span class="helper">Baca panduan lengkap sebelum submit artikel.</span>
-                    </div>
-
-                    <hr class="section-divider" />
-
                     <!-- File Upload: Artikel -->
                     <div class="form-group">
                         <label for="fileArtikel">File Artikel <span class="optional">(opsional)</span></label>
@@ -1591,7 +1967,12 @@
                                     <div class="file-name" id="previewArtikelName">file.pdf</div>
                                     <div class="file-size" id="previewArtikelSize">0 KB</div>
                                 </div>
-                                <button type="button" class="file-remove" id="removeArtikel" aria-label="Hapus file">✕</button>
+                                <div class="file-actions">
+                                    <button type="button" class="file-preview-btn" data-file-key="artikel" title="Lihat preview">
+                                        👁️ Preview
+                                    </button>
+                                    <button type="button" class="file-remove" id="removeArtikel" aria-label="Hapus file">✕</button>
+                                </div>
                             </div>
                         </div>
                         <span class="helper" id="fileArtikelHelper"></span>
@@ -1614,7 +1995,12 @@
                                     <div class="file-name" id="previewBuktiName">file.pdf</div>
                                     <div class="file-size" id="previewBuktiSize">0 KB</div>
                                 </div>
-                                <button type="button" class="file-remove" id="removeBukti" aria-label="Hapus file">✕</button>
+                                <div class="file-actions">
+                                    <button type="button" class="file-preview-btn" data-file-key="bukti" title="Lihat preview">
+                                        👁️ Preview
+                                    </button>
+                                    <button type="button" class="file-remove" id="removeBukti" aria-label="Hapus file">✕</button>
+                                </div>
                             </div>
                         </div>
                         <span class="helper" id="fileBuktiHelper"></span>
@@ -1637,7 +2023,12 @@
                                     <div class="file-name" id="previewLoaName">file.pdf</div>
                                     <div class="file-size" id="previewLoaSize">0 KB</div>
                                 </div>
-                                <button type="button" class="file-remove" id="removeLoa" aria-label="Hapus file">✕</button>
+                                <div class="file-actions">
+                                    <button type="button" class="file-preview-btn" data-file-key="loa" title="Lihat preview">
+                                        👁️ Preview
+                                    </button>
+                                    <button type="button" class="file-remove" id="removeLoa" aria-label="Hapus file">✕</button>
+                                </div>
                             </div>
                         </div>
                         <span class="helper" id="fileLoaHelper"></span>
@@ -1710,14 +2101,29 @@
     </div>
 
     <!-- =====================================================
-    JAVASCRIPT — VERSI FINAL DENGAN PERBAIKAN FETCH
+    PREVIEW MODAL
+    ===================================================== -->
+    <div id="previewModal" class="preview-modal hidden" role="dialog" aria-modal="true" aria-label="Preview File">
+        <div class="preview-modal-content">
+            <div class="preview-modal-header">
+                <span class="preview-modal-title" id="previewModalTitle">📄 Preview File</span>
+                <button class="preview-modal-close" id="previewModalClose" aria-label="Tutup preview">&times;</button>
+            </div>
+            <div class="preview-item" id="previewContainer">
+                <!-- Konten preview akan dirender di sini -->
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+    JAVASCRIPT
     ===================================================== -->
     <script>
         (function() {
             'use strict';
 
             // =====================================================
-            // KONFIGURASI — GANTI DENGAN URL WEB APP ANDA
+            // KONFIGURASI
             // =====================================================
             const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcMJ1g0XCjdQc5DHPjYXTm6iDT9HB_k6dFYO7hQZQQp8ZyZlrKal5yMMV6cVhsa0DoTg/exec";
 
@@ -1738,6 +2144,21 @@
             const resetBtn = document.getElementById('resetBtn');
             const submitBtn = document.getElementById('submitBtn');
 
+            // Carousel
+            const carouselSlides = document.getElementById('carouselSlides');
+            const carouselDots = document.getElementById('carouselDots');
+            const prevBtn = document.getElementById('carouselPrev');
+            const nextBtn = document.getElementById('carouselNext');
+            const slideCount = 3;
+            let currentSlide = 0;
+            let autoPlayInterval;
+
+            // Preview modal
+            const previewModal = document.getElementById('previewModal');
+            const previewModalTitle = document.getElementById('previewModalTitle');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewModalClose = document.getElementById('previewModalClose');
+
             // File inputs & previews
             const fileInputs = {
                 artikel: {
@@ -1747,7 +2168,8 @@
                     size: document.getElementById('previewArtikelSize'),
                     remove: document.getElementById('removeArtikel'),
                     drop: document.getElementById('dropArtikel'),
-                    helper: document.getElementById('fileArtikelHelper')
+                    helper: document.getElementById('fileArtikelHelper'),
+                    previewBtn: document.querySelector('[data-file-key="artikel"]')
                 },
                 bukti: {
                     input: document.getElementById('fileBukti'),
@@ -1756,7 +2178,8 @@
                     size: document.getElementById('previewBuktiSize'),
                     remove: document.getElementById('removeBukti'),
                     drop: document.getElementById('dropBukti'),
-                    helper: document.getElementById('fileBuktiHelper')
+                    helper: document.getElementById('fileBuktiHelper'),
+                    previewBtn: document.querySelector('[data-file-key="bukti"]')
                 },
                 loa: {
                     input: document.getElementById('fileLoa'),
@@ -1765,7 +2188,8 @@
                     size: document.getElementById('previewLoaSize'),
                     remove: document.getElementById('removeLoa'),
                     drop: document.getElementById('dropLoa'),
-                    helper: document.getElementById('fileLoaHelper')
+                    helper: document.getElementById('fileLoaHelper'),
+                    previewBtn: document.querySelector('[data-file-key="loa"]')
                 }
             };
 
@@ -1776,12 +2200,89 @@
             const totalSteps = 4;
             let isSubmitting = false;
 
-            // File data storage (base64)
             const fileData = {
                 artikel: null,
                 bukti: null,
                 loa: null
             };
+
+            // =====================================================
+            // CAROUSEL LOGIC
+            // =====================================================
+            function goToSlide(index) {
+                if (index < 0) index = slideCount - 1;
+                if (index >= slideCount) index = 0;
+                currentSlide = index;
+                carouselSlides.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+                // Update dots
+                document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentSlide);
+                });
+            }
+
+            function startAutoPlay() {
+                stopAutoPlay();
+                autoPlayInterval = setInterval(() => {
+                    goToSlide(currentSlide + 1);
+                }, 6000);
+            }
+
+            function stopAutoPlay() {
+                if (autoPlayInterval) {
+                    clearInterval(autoPlayInterval);
+                    autoPlayInterval = null;
+                }
+            }
+
+            // Event listeners carousel
+            prevBtn.addEventListener('click', () => {
+                goToSlide(currentSlide - 1);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+
+            nextBtn.addEventListener('click', () => {
+                goToSlide(currentSlide + 1);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+
+            carouselDots.addEventListener('click', (e) => {
+                const dot = e.target.closest('.carousel-dot');
+                if (!dot) return;
+                const index = parseInt(dot.getAttribute('data-slide'), 10);
+                goToSlide(index);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+
+            // Pause on hover (optional)
+            const carouselContainer = document.querySelector('.carousel-container');
+            carouselContainer.addEventListener('mouseenter', stopAutoPlay);
+            carouselContainer.addEventListener('mouseleave', startAutoPlay);
+            carouselContainer.addEventListener('touchstart', stopAutoPlay);
+            carouselContainer.addEventListener('touchend', () => {
+                setTimeout(startAutoPlay, 3000); // resume after 3s
+            });
+
+            // Keyboard navigation for carousel
+            document.addEventListener('keydown', (e) => {
+                if (document.querySelector('.form-section.active[data-section="1"]') && !previewModal.classList.contains('hidden')) {
+                    if (e.key === 'ArrowLeft') {
+                        goToSlide(currentSlide - 1);
+                        stopAutoPlay();
+                        startAutoPlay();
+                    } else if (e.key === 'ArrowRight') {
+                        goToSlide(currentSlide + 1);
+                        stopAutoPlay();
+                        startAutoPlay();
+                    }
+                }
+            });
+
+            // Init auto play
+            startAutoPlay();
 
             // =====================================================
             // HELPERS
@@ -1793,10 +2294,8 @@
                 msgText.textContent = text;
                 if (type === 'info' || type === 'success') {
                     clearTimeout(window.messageTimeout);
-                    window.messageTimeout = setTimeout(function() {
-                        if (messageBox.classList.contains('show')) {
-                            hideMessage();
-                        }
+                    window.messageTimeout = setTimeout(() => {
+                        if (messageBox.classList.contains('show')) hideMessage();
                     }, 8000);
                 }
             }
@@ -1851,41 +2350,237 @@
             }
 
             // =====================================================
+            // MODAL PREVIEW
+            // =====================================================
+            function openPreviewModal(title) {
+                previewModalTitle.textContent = '📄 ' + title;
+                previewContainer.innerHTML = '';
+                previewModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closePreviewModal() {
+                previewModal.classList.add('hidden');
+                previewContainer.innerHTML = '';
+                document.body.style.overflow = '';
+            }
+
+            previewModalClose.addEventListener('click', closePreviewModal);
+            previewModal.addEventListener('click', function(e) {
+                if (e.target === previewModal) closePreviewModal();
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !previewModal.classList.contains('hidden')) {
+                    closePreviewModal();
+                }
+            });
+
+            function setPreviewLoading() {
+                previewContainer.innerHTML = `
+                    <div class="preview-loading">
+                        <div class="spinner"></div>
+                        <span>Memuat preview...</span>
+                    </div>`;
+            }
+
+            function setPreviewError(message) {
+                previewContainer.innerHTML = `
+                    <div class="preview-error">
+                        <span class="error-icon">⚠️</span>
+                        <strong>Gagal memuat preview</strong>
+                        <p>${message}</p>
+                    </div>`;
+            }
+
+            // =====================================================
+            // PREVIEW RENDERER
+            // =====================================================
+            function getFileExtension(fileName) {
+                if (!fileName) return '';
+                return fileName.split('.').pop().toLowerCase();
+            }
+
+            function getMimeTypeFromFileName(fileName) {
+                const ext = getFileExtension(fileName);
+                const mimeMap = {
+                    'pdf': 'application/pdf',
+                    'doc': 'application/msword',
+                    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'txt': 'text/plain',
+                    'png': 'image/png',
+                    'jpg': 'image/jpeg',
+                    'jpeg': 'image/jpeg',
+                    'gif': 'image/gif',
+                    'webp': 'image/webp',
+                    'bmp': 'image/bmp',
+                    'svg': 'image/svg+xml'
+                };
+                return mimeMap[ext] || '';
+            }
+
+            async function renderPreview(fileObj) {
+                if (!fileObj) {
+                    setPreviewError('File tidak tersedia.');
+                    return;
+                }
+
+                setPreviewLoading();
+
+                const base64Data = fileObj.data;
+                const mimeType = fileObj.mimeType || getMimeTypeFromFileName(fileObj.fileName);
+                const fileName = fileObj.fileName || '';
+
+                try {
+                    if (mimeType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf')) {
+                        await renderPDF(base64Data);
+                    } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                               fileName.toLowerCase().endsWith('.docx')) {
+                        await renderDOCX(base64Data);
+                    } else if (mimeType === 'application/msword' || fileName.toLowerCase().endsWith('.doc')) {
+                        setPreviewError('File .DOC (format lama) tidak dapat ditampilkan. Konversi ke .DOCX atau .PDF.');
+                    } else if (mimeType.startsWith('image/')) {
+                        renderImage(base64Data, mimeType);
+                    } else if (mimeType === 'text/plain' || fileName.toLowerCase().endsWith('.txt')) {
+                        renderTXT(base64Data);
+                    } else {
+                        setPreviewError('Format file tidak didukung untuk preview.');
+                    }
+                } catch (err) {
+                    console.error('Preview error:', err);
+                    setPreviewError(err.message || 'Terjadi kesalahan saat memuat preview.');
+                }
+            }
+
+            async function renderPDF(base64Data) {
+                if (typeof pdfjsLib !== 'undefined') {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                } else {
+                    throw new Error('Library pdf.js tidak tersedia.');
+                }
+
+                const binaryStr = atob(base64Data.split(',')[1]);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+
+                const loadingTask = pdfjsLib.getDocument({ data: bytes });
+                const pdf = await loadingTask.promise;
+                const totalPages = pdf.numPages;
+                previewContainer.innerHTML = '';
+
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const containerWidth = previewContainer.clientWidth - 40;
+                    const viewport = page.getViewport({ scale: 1 });
+                    const scale = containerWidth / viewport.width;
+                    const scaledViewport = page.getViewport({ scale: Math.min(scale, 2) });
+
+                    const pageWrapper = document.createElement('div');
+                    pageWrapper.className = 'pdf-page';
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = scaledViewport.width;
+                    canvas.height = scaledViewport.height;
+                    const ctx = canvas.getContext('2d');
+                    const renderContext = {
+                        canvasContext: ctx,
+                        viewport: scaledViewport
+                    };
+                    await page.render(renderContext).promise;
+
+                    const label = document.createElement('div');
+                    label.className = 'page-label';
+                    label.textContent = `Halaman ${pageNum} dari ${totalPages}`;
+
+                    pageWrapper.appendChild(canvas);
+                    pageWrapper.appendChild(label);
+                    previewContainer.appendChild(pageWrapper);
+                }
+            }
+
+            async function renderDOCX(base64Data) {
+                if (typeof mammoth === 'undefined') throw new Error('Library mammoth.js tidak tersedia.');
+                const binaryStr = atob(base64Data.split(',')[1]);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                const arrayBuffer = bytes.buffer;
+                const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                const html = result.value;
+                previewContainer.innerHTML = `<div class="docx-content">${html}</div>`;
+                if (!html || html.trim().length === 0) setPreviewError('Dokumen DOCX kosong.');
+            }
+
+            function renderImage(base64Data, mimeType) {
+                const img = document.createElement('img');
+                img.src = base64Data;
+                img.alt = 'Preview gambar';
+                img.style.cssText = 'max-width:100%;height:auto;display:block;margin:0 auto;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,0.1);';
+                img.onerror = () => setPreviewError('Gambar tidak dapat ditampilkan.');
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(img);
+            }
+
+            function renderTXT(base64Data) {
+                let text = '';
+                try {
+                    const binaryStr = atob(base64Data.split(',')[1]);
+                    text = decodeURIComponent(escape(binaryStr));
+                } catch (e) {
+                    text = atob(base64Data.split(',')[1]) || '[Tidak dapat mendecode teks]';
+                }
+                const pre = document.createElement('pre');
+                pre.textContent = text;
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(pre);
+            }
+
+            // Tombol preview di setiap file
+            Object.keys(fileInputs).forEach(key => {
+                const btn = fileInputs[key].previewBtn;
+                if (btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const fileObj = fileData[key];
+                        if (!fileObj) {
+                            showMessage('error', 'Tidak Ada File', 'Silakan pilih file terlebih dahulu.');
+                            return;
+                        }
+                        openPreviewModal(fileObj.fileName || 'Preview File');
+                        renderPreview(fileObj);
+                    });
+                }
+            });
+
+            // =====================================================
             // STEP NAVIGATION
             // =====================================================
             function goToStep(step) {
                 if (step < 1 || step > totalSteps) return;
                 currentStep = step;
-
                 sections.forEach((el, idx) => {
                     el.classList.toggle('active', idx + 1 === step);
                     el.setAttribute('aria-hidden', idx + 1 !== step);
                 });
-
                 dots.forEach((dot, idx) => {
                     const num = idx + 1;
                     dot.classList.remove('active', 'completed');
                     if (num === step) dot.classList.add('active');
                     else if (num < step) dot.classList.add('completed');
                 });
-
                 const pct = ((step - 1) / (totalSteps - 1)) * 100;
                 progressFill.style.width = pct + '%';
-                const progressBar = document.querySelector('.progress-wrapper');
-                progressBar.setAttribute('aria-valuenow', Math.round(pct));
-
+                document.querySelector('.progress-wrapper').setAttribute('aria-valuenow', Math.round(pct));
                 document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
                 hideMessage();
             }
 
             // =====================================================
-            // VALIDATION — ALL FIELDS OPTIONAL
+            // VALIDATION
             // =====================================================
             function validateStep1() {
                 const nim = document.getElementById('nim').value.trim();
                 const email = document.getElementById('email').value.trim();
-
                 if (nim && !validateNim(nim)) {
                     setFieldError('nim', 'Format NIM harus 202303001 (4 digit + 03 + 3 digit)');
                     return false;
@@ -1896,7 +2591,6 @@
                     document.getElementById('nim').classList.remove('success', 'error');
                     setHelper('nimHelper', 'Format: 202303001 (4 digit tahun + 03 + 3 digit)');
                 }
-
                 if (email && !validateEmail(email)) {
                     setFieldError('email', 'Format email tidak valid');
                     return false;
@@ -1907,7 +2601,6 @@
                     document.getElementById('email').classList.remove('success', 'error');
                     setHelper('emailHelper', '');
                 }
-
                 const nama = document.getElementById('namaLengkap').value.trim();
                 if (nama) {
                     setFieldSuccess('namaLengkap');
@@ -1920,15 +2613,14 @@
             }
 
             function validateStep2() {
-                const fields = ['judulArtikel', 'pendahuluan', 'metodologi', 'hasil', 'simpulan', 'daftarPustaka'];
-                fields.forEach(id => {
+                ['judulArtikel','pendahuluan','metodologi','hasil','simpulan','daftarPustaka'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el.value.trim()) {
                         setFieldSuccess(id);
-                        setHelper(id + 'Helper', '✓', 'success');
+                        setHelper(id+'Helper', '✓', 'success');
                     } else {
-                        el.classList.remove('success', 'error');
-                        setHelper(id + 'Helper', '');
+                        el.classList.remove('success','error');
+                        setHelper(id+'Helper', '');
                     }
                 });
                 const saran = document.getElementById('saran');
@@ -1936,53 +2628,48 @@
                     setFieldSuccess('saran');
                     setHelper('saranHelper', '✓', 'success');
                 } else {
-                    saran.classList.remove('success', 'error');
+                    saran.classList.remove('success','error');
                     setHelper('saranHelper', '');
                 }
                 return true;
             }
 
             function validateStep3() {
-                const fields = ['abstractEn', 'keywordEn', 'abstrakId', 'keywordId'];
-                fields.forEach(id => {
+                ['abstractEn','keywordEn','abstrakId','keywordId'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el.value.trim()) {
                         setFieldSuccess(id);
-                        setHelper(id + 'Helper', '✓', 'success');
+                        setHelper(id+'Helper', '✓', 'success');
                     } else {
-                        el.classList.remove('success', 'error');
-                        setHelper(id + 'Helper', '');
+                        el.classList.remove('success','error');
+                        setHelper(id+'Helper', '');
                     }
                 });
                 return true;
             }
 
             function validateStep4() {
-                ['artikel', 'bukti', 'loa'].forEach(key => {
+                ['artikel','bukti','loa'].forEach(key => {
                     const cfg = fileInputs[key];
                     if (fileData[key]) {
-                        setFieldSuccess(cfg.helper.id.replace('Helper', ''));
+                        setFieldSuccess(cfg.helper.id.replace('Helper',''));
                         setHelper(cfg.helper.id, '✓ File siap', 'success');
                         cfg.drop.style.borderColor = 'var(--success)';
                     } else {
-                        const inputEl = document.getElementById(cfg.helper.id.replace('Helper', ''));
-                        if (inputEl) {
-                            inputEl.classList.remove('success', 'error');
-                        }
+                        const inputEl = document.getElementById(cfg.helper.id.replace('Helper',''));
+                        if (inputEl) inputEl.classList.remove('success','error');
                         setHelper(cfg.helper.id, '');
                         cfg.drop.style.borderColor = '';
                     }
                 });
-
                 const namaJurnal = document.getElementById('namaJurnal');
                 if (namaJurnal.value.trim()) {
                     setFieldSuccess('namaJurnal');
                     setHelper('namaJurnalHelper', '✓', 'success');
                 } else {
-                    namaJurnal.classList.remove('success', 'error');
+                    namaJurnal.classList.remove('success','error');
                     setHelper('namaJurnalHelper', '');
                 }
-
                 const linkJurnal = document.getElementById('linkJurnal');
                 const linkVal = linkJurnal.value.trim();
                 if (linkVal && !linkVal.startsWith('http')) {
@@ -1992,10 +2679,9 @@
                     setFieldSuccess('linkJurnal');
                     setHelper('linkJurnalHelper', '✓', 'success');
                 } else {
-                    linkJurnal.classList.remove('success', 'error');
+                    linkJurnal.classList.remove('success','error');
                     setHelper('linkJurnalHelper', '');
                 }
-
                 const linkSinta = document.getElementById('linkSinta');
                 const sintaVal = linkSinta.value.trim();
                 if (sintaVal && !sintaVal.startsWith('http')) {
@@ -2005,7 +2691,7 @@
                     setFieldSuccess('linkSinta');
                     setHelper('linkSintaHelper', '✓', 'success');
                 } else {
-                    linkSinta.classList.remove('success', 'error');
+                    linkSinta.classList.remove('success','error');
                     setHelper('linkSintaHelper', 'Opsional');
                 }
                 return true;
@@ -2016,15 +2702,10 @@
             // =====================================================
             function handleFileSelect(key, file) {
                 if (!file) return;
-
-                const MAX_SIZE = 10 * 1024 * 1024;
-                if (file.size > MAX_SIZE) {
-                    showMessage('error', 'Ukuran File Terlalu Besar',
-                        'File "' + file.name + '" melebihi batas 10 MB.'
-                    );
+                if (file.size > 10 * 1024 * 1024) {
+                    showMessage('error', 'Ukuran File Terlalu Besar', `"${file.name}" melebihi batas 10 MB.`);
                     return;
                 }
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const base64 = e.target.result;
@@ -2034,30 +2715,18 @@
                         fileName: file.name,
                         size: file.size
                     };
-
                     const preview = fileInputs[key];
                     preview.name.textContent = file.name;
                     preview.size.textContent = formatFileSize(file.size);
                     preview.preview.classList.add('show');
                     preview.input.style.display = 'none';
                     preview.drop.style.borderColor = 'var(--success)';
-
-                    setHelper(preview.helper.id, '✓ File siap', 'success');
-                    const inputEl = document.getElementById(preview.helper.id.replace('Helper', ''));
-                    if (inputEl) {
-                        inputEl.classList.remove('error');
-                        inputEl.classList.add('success');
-                    }
-
+                    setHelper(preview.helper.id, '✓ File siap — klik Preview untuk melihat isi', 'success');
+                    const inputEl = document.getElementById(preview.helper.id.replace('Helper',''));
+                    if (inputEl) { inputEl.classList.remove('error'); inputEl.classList.add('success'); }
                     hideMessage();
                 };
-
-                reader.onerror = function() {
-                    showMessage('error', 'Gagal Membaca File',
-                        'Terjadi kesalahan saat membaca file. Silakan coba lagi.'
-                    );
-                };
-
+                reader.onerror = () => showMessage('error', 'Gagal Membaca File', 'Terjadi kesalahan saat membaca file.');
                 reader.readAsDataURL(file);
             }
 
@@ -2068,168 +2737,93 @@
                 preview.input.style.display = 'block';
                 preview.input.value = '';
                 preview.drop.style.borderColor = '';
-                const inputEl = document.getElementById(preview.helper.id.replace('Helper', ''));
-                if (inputEl) {
-                    inputEl.classList.remove('success', 'error');
-                }
+                const inputEl = document.getElementById(preview.helper.id.replace('Helper',''));
+                if (inputEl) inputEl.classList.remove('success','error');
                 setHelper(preview.helper.id, '');
                 hideMessage();
             }
 
-            // Setup file inputs
             Object.keys(fileInputs).forEach(key => {
                 const cfg = fileInputs[key];
-                const input = cfg.input;
-                const drop = cfg.drop;
-
-                drop.addEventListener('click', function(e) {
-                    if (e.target.tagName !== 'INPUT') {
-                        input.click();
+                cfg.drop.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('file-preview-btn') && !e.target.classList.contains('file-remove')) {
+                        cfg.input.click();
                     }
                 });
-
-                input.addEventListener('change', function() {
-                    if (this.files && this.files.length > 0) {
-                        handleFileSelect(key, this.files[0]);
-                    }
+                cfg.input.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) handleFileSelect(key, this.files[0]);
                 });
-
-                drop.addEventListener('dragover', function(e) {
+                cfg.drop.addEventListener('dragover', e => { e.preventDefault(); cfg.drop.classList.add('dragover'); });
+                cfg.drop.addEventListener('dragleave', e => { e.preventDefault(); cfg.drop.classList.remove('dragover'); });
+                cfg.drop.addEventListener('drop', e => {
                     e.preventDefault();
-                    this.classList.add('dragover');
-                });
-
-                drop.addEventListener('dragleave', function(e) {
-                    e.preventDefault();
-                    this.classList.remove('dragover');
-                });
-
-                drop.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    this.classList.remove('dragover');
-                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    cfg.drop.classList.remove('dragover');
+                    if (e.dataTransfer.files.length > 0) {
                         const file = e.dataTransfer.files[0];
                         const dt = new DataTransfer();
                         dt.items.add(file);
-                        input.files = dt.files;
+                        cfg.input.files = dt.files;
                         handleFileSelect(key, file);
                     }
                 });
-
-                cfg.remove.addEventListener('click', function() {
-                    handleFileRemove(key);
-                });
+                cfg.remove.addEventListener('click', () => handleFileRemove(key));
             });
 
             // =====================================================
             // STEP NAV BUTTONS
             // =====================================================
-            document.getElementById('step1Next').addEventListener('click', function() {
-                validateStep1();
-                goToStep(2);
-            });
-
-            document.getElementById('step2Prev').addEventListener('click', function() { goToStep(1); });
-            document.getElementById('step2Next').addEventListener('click', function() {
-                validateStep2();
-                goToStep(3);
-            });
-
-            document.getElementById('step3Prev').addEventListener('click', function() { goToStep(2); });
-            document.getElementById('step3Next').addEventListener('click', function() {
-                validateStep3();
-                goToStep(4);
-            });
-
-            document.getElementById('step4Prev').addEventListener('click', function() { goToStep(3); });
+            document.getElementById('step1Next').addEventListener('click', () => { validateStep1(); goToStep(2); });
+            document.getElementById('step2Prev').addEventListener('click', () => goToStep(1));
+            document.getElementById('step2Next').addEventListener('click', () => { validateStep2(); goToStep(3); });
+            document.getElementById('step3Prev').addEventListener('click', () => goToStep(2));
+            document.getElementById('step3Next').addEventListener('click', () => { validateStep3(); goToStep(4); });
+            document.getElementById('step4Prev').addEventListener('click', () => goToStep(3));
 
             // =====================================================
-            // FORM SUBMIT — PERBAIKAN UTAMA: MENGGUNAKAN application/x-www-form-urlencoded
-            // untuk MENGHINDARI CORS PREFLIGHT (OPTIONS request)
+            // FORM SUBMIT
             // =====================================================
             async function submitWithRetry(data, maxRetries = 2) {
                 let lastError = null;
-
                 for (let attempt = 1; attempt <= maxRetries; attempt++) {
                     try {
-                        console.log(`🔄 Percobaan ${attempt} dari ${maxRetries}...`);
-
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-                        // === PERBAIKAN UTAMA ===
-                        // Gunakan application/x-www-form-urlencoded untuk menghindari preflight OPTIONS
-                        // Bungkus data JSON dalam parameter 'payload'
-                        const formBody = new URLSearchParams({
-                            payload: JSON.stringify(data)
-                        }).toString();
-
+                        const formBody = new URLSearchParams({ payload: JSON.stringify(data) }).toString();
                         const response = await fetch(APP_SCRIPT_URL, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                             body: formBody,
                             signal: controller.signal,
                             credentials: 'omit'
                         });
-
                         clearTimeout(timeoutId);
-
                         if (!response.ok) {
                             let errMsg = 'HTTP ' + response.status;
-                            try {
-                                const json = await response.json();
-                                if (json.error) errMsg = json.error;
-                            } catch (e) {
-                                const text = await response.text();
-                                if (text && text.length < 200) errMsg = text;
-                            }
+                            try { const json = await response.json(); if (json.error) errMsg = json.error; } catch (e) { const text = await response.text(); if (text && text.length < 200) errMsg = text; }
                             throw new Error(errMsg);
                         }
-
-                        const result = await response.json();
-                        return result;
-
+                        return await response.json();
                     } catch (error) {
                         lastError = error;
                         console.warn(`⚠️ Percobaan ${attempt} gagal:`, error.message);
-
-                        if (attempt < maxRetries) {
-                            console.log('⏳ Menunggu 2 detik sebelum mencoba ulang...');
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                        }
+                        if (attempt < maxRetries) await new Promise(resolve => setTimeout(resolve, 2000));
                     }
                 }
-
                 throw lastError || new Error('Gagal setelah beberapa kali percobaan.');
             }
 
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-
                 if (isSubmitting) return;
-
-                if (!validateStep4()) {
-                    showMessage('error', 'Validasi Gagal', 'Periksa kembali field yang ditandai.');
-                    return;
-                }
+                if (!validateStep4()) { showMessage('error', 'Validasi Gagal', 'Periksa kembali field yang ditandai.'); return; }
 
                 const hasData = document.getElementById('namaLengkap').value.trim() ||
-                    document.getElementById('nim').value.trim() ||
-                    document.getElementById('email').value.trim() ||
-                    document.getElementById('judulArtikel').value.trim() ||
-                    fileData.artikel ||
-                    fileData.bukti ||
-                    fileData.loa;
+                                document.getElementById('nim').value.trim() ||
+                                document.getElementById('email').value.trim() ||
+                                document.getElementById('judulArtikel').value.trim() ||
+                                fileData.artikel || fileData.bukti || fileData.loa;
+                if (!hasData && !confirm('Anda belum mengisi data apapun. Tetap submit?')) return;
 
-                if (!hasData) {
-                    if (!confirm('Anda belum mengisi data apapun. Tetap submit?')) {
-                        return;
-                    }
-                }
-
-                // Siapkan data
                 const data = {
                     namaLengkap: document.getElementById('namaLengkap').value.trim(),
                     nim: document.getElementById('nim').value.trim(),
@@ -2263,223 +2857,97 @@
                         isSubmitting = false;
                         submitBtn.disabled = false;
                         submitBtn.classList.remove('loading');
-
                         if (result && result.success) {
                             form.style.display = 'none';
                             resultContainer.classList.remove('hidden');
                             resultRegId.textContent = result.regId;
-                            if (result.qrCode) {
-                                resultQrCode.src = result.qrCode;
-                                resultQrCode.style.display = 'block';
-                            } else {
-                                resultQrCode.style.display = 'none';
-                            }
+                            if (result.qrCode) { resultQrCode.src = result.qrCode; resultQrCode.style.display = 'block'; } else resultQrCode.style.display = 'none';
                             resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            showMessage('success', '✅ Registrasi Berhasil!',
-                                'Artikel berhasil terdaftar. Simpan nomor registrasi Anda.'
-                            );
+                            showMessage('success', '✅ Registrasi Berhasil!', 'Artikel berhasil terdaftar. Simpan nomor registrasi Anda.');
                         } else {
-                            showMessage('error', 'Gagal Menyimpan Data',
-                                result.error || 'Terjadi kesalahan saat menyimpan. Silakan coba lagi.'
-                            );
+                            showMessage('error', 'Gagal Menyimpan Data', result.error || 'Terjadi kesalahan saat menyimpan.');
                         }
                     })
                     .catch(error => {
                         isSubmitting = false;
                         submitBtn.disabled = false;
                         submitBtn.classList.remove('loading');
-
                         let errorMsg = error.message || 'Gagal terhubung ke server.';
-                        if (error.name === 'AbortError') {
-                            errorMsg = '⏱️ Permintaan timeout (30 detik). Periksa koneksi internet dan URL Web App.';
-                        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                            errorMsg =
-                                '❌ Tidak dapat terhubung ke server.\n\n' +
-                                'SOLUSI:\n' +
-                                '1. Pastikan Web App di-deploy dengan akses "Anyone"\n' +
-                                '2. Buka URL berikut di browser terlebih dahulu untuk menguji:\n' +
-                                '   ' + APP_SCRIPT_URL + '\n\n' +
-                                '3. Jika muncul JSON sukses, refresh halaman ini lalu coba lagi\n' +
-                                '4. Pastikan backend code.gs sudah diperbarui untuk membaca e.parameter.payload\n' +
-                                '5. Periksa koneksi internet dan firewall\n\n' +
-                                '📝 CATATAN: Kode ini menggunakan application/x-www-form-urlencoded\n' +
-                                'untuk menghindari CORS preflight. Pastikan backend mendukung format ini.';
-                        }
+                        if (error.name === 'AbortError') errorMsg = '⏱️ Permintaan timeout (30 detik).';
+                        else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) errorMsg = '❌ Tidak dapat terhubung ke server.\n\nPeriksa koneksi dan URL Web App.';
                         showMessage('error', 'Error Server', errorMsg);
-                        console.error('❌ Fetch error:', error);
                     });
             });
 
             // =====================================================
-            // RESET / NEW SUBMISSION
+            // RESET
             // =====================================================
             resetBtn.addEventListener('click', function() {
                 form.reset();
                 form.style.display = 'block';
                 resultContainer.classList.add('hidden');
                 hideMessage();
-
-                Object.keys(fileData).forEach(key => {
-                    fileData[key] = null;
-                    handleFileRemove(key);
-                });
-
-                document.querySelectorAll('.form-group input, .form-group textarea').forEach(el => {
-                    el.classList.remove('success', 'error');
-                });
-                document.querySelectorAll('.helper').forEach(el => {
-                    el.textContent = '';
-                    el.className = 'helper';
-                });
-
+                Object.keys(fileData).forEach(key => { fileData[key] = null; handleFileRemove(key); });
+                document.querySelectorAll('.form-group input, .form-group textarea').forEach(el => el.classList.remove('success','error'));
+                document.querySelectorAll('.helper').forEach(el => { el.textContent = ''; el.className = 'helper'; });
                 goToStep(1);
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');
                 isSubmitting = false;
-
-                Object.values(fileInputs).forEach(cfg => {
-                    cfg.drop.style.borderColor = '';
-                    cfg.input.style.display = 'block';
-                });
-
-                showMessage('info', 'Formulir Direset',
-                    'Silakan isi formulir untuk submit artikel baru. Semua field bersifat opsional.'
-                );
+                Object.values(fileInputs).forEach(cfg => { cfg.drop.style.borderColor = ''; cfg.input.style.display = 'block'; });
+                closePreviewModal();
+                showMessage('info', 'Formulir Direset', 'Silakan isi formulir untuk submit artikel baru.');
             });
 
-            // =====================================================
-            // FOOTER YEAR
-            // =====================================================
+            // Footer year
             document.getElementById('footerYear').textContent = new Date().getFullYear();
 
-            // =====================================================
-            // INIT
-            // =====================================================
+            // Init
             goToStep(1);
 
-            // Cek koneksi ke Web App saat halaman dimuat (GET)
             if (APP_SCRIPT_URL && APP_SCRIPT_URL.startsWith('https://script.google.com/macros/s/')) {
-                fetch(APP_SCRIPT_URL, {
-                    method: 'GET',
-                    credentials: 'omit'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.success) {
-                        console.log('✅ Koneksi ke Web App berhasil.');
-                        showMessage('info', 'Selamat Datang',
-                            'Silakan isi formulir. Semua field bersifat opsional — isi sesuai kebutuhan Anda.'
-                        );
-                    } else {
-                        console.warn('⚠️ Web App merespon tetapi tidak sukses:', data);
-                        showMessage('info', 'Periksa Konfigurasi',
-                            'Web App merespon tetapi ada masalah. Periksa kembali URL dan deployment.'
-                        );
-                    }
-                })
-                .catch(error => {
-                    console.warn('⚠️ Tidak dapat mengakses Web App:', error.message);
-                    // Tidak menampilkan error di sini karena bisa jadi GET tidak diizinkan
-                    // Tapi kita tetap tampilkan pesan selamat datang
-                    showMessage('info', 'Selamat Datang',
-                        'Silakan isi formulir. Semua field bersifat opsional — isi sesuai kebutuhan Anda.'
-                    );
-                });
-            } else {
-                console.warn('⚠️ APP_SCRIPT_URL tidak valid.');
-                showMessage('error', 'Konfigurasi Error',
-                    'APP_SCRIPT_URL tidak valid. Silakan periksa file HTML dan ganti dengan URL Web App yang benar.'
-                );
+                fetch(APP_SCRIPT_URL, { method: 'GET', credentials: 'omit' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success) console.log('✅ Koneksi ke Web App berhasil.');
+                    })
+                    .catch(() => {});
             }
 
-            // =====================================================
-            // KEYBOARD NAV
-            // =====================================================
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    const active = document.activeElement;
-                    if (active && active.closest('.form-section')) {
-                        const section = active.closest('.form-section');
-                        const nextBtn = section.querySelector('.btn-primary');
-                        if (nextBtn) {
-                            e.preventDefault();
-                            nextBtn.click();
-                        }
-                    }
-                }
-            });
-
-            // =====================================================
-            // LIVE VALIDATION ON BLUR
-            // =====================================================
+            // Live validation on blur
             document.querySelectorAll('input, textarea').forEach(el => {
                 el.addEventListener('blur', function() {
                     const id = this.id;
                     const val = this.value.trim();
-
-                    if (!val) {
-                        this.classList.remove('success', 'error');
-                        setHelper(id + 'Helper', '');
-                        return;
-                    }
-
+                    if (!val) { this.classList.remove('success','error'); setHelper(id+'Helper',''); return; }
                     if (id === 'nim') {
-                        if (!validateNim(val)) {
-                            setFieldError(id, 'Format: 202303001');
-                        } else {
-                            setFieldSuccess(id);
-                            setHelper(id + 'Helper', '✓', 'success');
-                        }
+                        if (!validateNim(val)) setFieldError(id, 'Format: 202303001');
+                        else { setFieldSuccess(id); setHelper(id+'Helper', '✓', 'success'); }
                     } else if (id === 'email') {
-                        if (!validateEmail(val)) {
-                            setFieldError(id, 'Email tidak valid');
-                        } else {
-                            setFieldSuccess(id);
-                            setHelper(id + 'Helper', '✓', 'success');
-                        }
+                        if (!validateEmail(val)) setFieldError(id, 'Email tidak valid');
+                        else { setFieldSuccess(id); setHelper(id+'Helper', '✓', 'success'); }
                     } else if (id === 'linkJurnal' || id === 'linkSinta') {
-                        if (val && !val.startsWith('http')) {
-                            setFieldError(id, 'URL harus diawali http:// atau https://');
-                        } else if (val) {
-                            setFieldSuccess(id);
-                            setHelper(id + 'Helper', '✓', 'success');
-                        }
+                        if (!val.startsWith('http')) setFieldError(id, 'URL harus diawali http:// atau https://');
+                        else { setFieldSuccess(id); setHelper(id+'Helper', '✓', 'success'); }
                     } else {
-                        if (val) {
-                            setFieldSuccess(id);
-                            setHelper(id + 'Helper', '✓', 'success');
-                        }
+                        setFieldSuccess(id);
+                        setHelper(id+'Helper', '✓', 'success');
                     }
                 });
             });
 
-            // =====================================================
-            // TOUCH FRIENDLY: iOS zoom fix
-            // =====================================================
+            // iOS zoom fix
             document.querySelectorAll('input, select, textarea').forEach(el => {
                 el.addEventListener('focus', function() {
-                    setTimeout(() => {
-                        this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 300);
+                    setTimeout(() => this.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
                 });
             });
 
-            // =====================================================
-            // CEK KONEKSI INTERNET
-            // =====================================================
-            window.addEventListener('online', function() {
-                showMessage('info', 'Koneksi Kembali', 'Internet terdeteksi. Silakan coba submit ulang.');
-            });
-            window.addEventListener('offline', function() {
-                showMessage('error', 'Tidak Ada Koneksi', 'Periksa koneksi internet Anda.');
-            });
+            window.addEventListener('online', () => showMessage('info', 'Koneksi Kembali', 'Internet terdeteksi.'));
+            window.addEventListener('offline', () => showMessage('error', 'Tidak Ada Koneksi', 'Periksa koneksi internet.'));
 
-            console.log('📘 Form Monitoring Publikasi Jurnal loaded successfully.');
-            console.log('🔗 Web App URL:', APP_SCRIPT_URL);
-            console.log('📝 Menggunakan application/x-www-form-urlencoded untuk menghindari CORS preflight.');
-
+            console.log('📘 Form Monitoring Publikasi Jurnal loaded. Carousel panduan di Step 1 aktif.');
         })();
     </script>
-
 </body>
 </html>
