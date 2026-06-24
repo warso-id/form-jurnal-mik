@@ -6,10 +6,16 @@
     <title>Monitoring Publikasi Jurnal</title>
 
     <!-- ========== PDF.js Library ========== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer">
+    </script>
 
     <!-- ========== Mammoth.js (untuk DOCX) ========== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer">
+    </script>
 
     <style>
         /* =====================================================
@@ -56,6 +62,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             display: flex; flex-direction: column; align-items: center;
+            padding: 0; margin: 0;
         }
 
         /* Scrollbar */
@@ -170,7 +177,12 @@
         .file-upload-area .label { font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
         .file-upload-area .sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
         .file-upload-area .file-types { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; background: var(--bg); padding: 2px 12px; border-radius: 12px; display: inline-block; }
-        .file-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+        /* ❗ INPUT FILE: transparan selalu, TIDAK PERNAH di-hide */
+        .file-upload-area input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
+        }
+
         .file-preview { display: none; margin-top: 12px; padding: 12px 16px; background: #f0f7ff; border-radius: var(--radius-xs); border-left: 4px solid var(--primary-light); align-items: center; gap: 12px; animation: fadeSlide 0.3s ease; }
         .file-preview.show { display: flex; }
         .file-preview .file-icon { font-size: 1.6rem; flex-shrink: 0; }
@@ -251,11 +263,6 @@
         .preview-item img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
         .preview-item pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; background: #fff; padding: 20px; border-radius: var(--radius-xs); }
         .preview-item .docx-content { background: #fff; padding: 30px; border-radius: var(--radius-xs); max-width: 800px; margin: 0 auto; line-height: 1.7; }
-
-        /* Responsive & Dark Mode (gabungan dari sebelumnya) */
-        @media (max-width: 768px) { /* ... */ }
-        @media (max-width: 480px) { /* ... */ }
-        @media (prefers-color-scheme: dark) { /* ... */ }
     </style>
 </head>
 
@@ -274,26 +281,26 @@
 
         <main class="form-card" role="main">
 
-            <!-- ========== CAROUSEL PANDUAN (DI ATAS STEP 1) ========== -->
+            <!-- CAROUSEL PANDUAN -->
             <div class="carousel-container" aria-roledescription="carousel" aria-label="Panduan Penulisan Jurnal">
                 <div class="carousel-slides" id="carouselSlides">
-                    <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="Slide 1 dari 3">
+                    <div class="carousel-slide">
                         <span class="guide-icon">📌</span>
                         <h3>Panduan Penulisan Jurnal</h3>
                         <p>Buat artikel Jurnal mengikuti guidelines berikut:</p>
                         <p><strong>INSTRUCTIONS FOR AUTHORS JURNAL PUSTAKA KOMUNIKASI</strong></p>
                     </div>
-                    <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="Slide 2 dari 3">
+                    <div class="carousel-slide">
                         <span class="guide-icon">📄</span>
                         <h3>Unduh Template Artikel</h3>
                         <p>Gunakan template resmi untuk memformat artikel Anda.</p>
-                        <a href="https://docs.google.com/document/d/1Uaw9PAAEhZ4bIhbeE6bh3htX3bfKZ9NP/edit" target="_blank" rel="noopener noreferrer" class="btn-link">⬇️ Download Template</a>
+                        <a href="https://docs.google.com/document/d/1VJkAaWNYhIMYZ5HpUjRXY0Xmk6wfcrVd/edit" target="_blank" rel="noopener" class="btn-link">⬇️ Download Template</a>
                     </div>
-                    <div class="carousel-slide" role="group" aria-roledescription="slide" aria-label="Slide 3 dari 3">
+                    <div class="carousel-slide">
                         <span class="guide-icon">🔗</span>
                         <h3>Panduan Lengkap Online</h3>
                         <p>Baca seluruh ketentuan dan panduan di situs resmi jurnal:</p>
-                        <a href="https://journal.moestopo.ac.id/index.php/pustakom/about/submissions#authorGuidelines" target="_blank" rel="noopener noreferrer" class="btn-link">🌐 Buka Panduan Lengkap</a>
+                        <a href="https://journal.moestopo.ac.id/index.php/pustakom/about/submissions#authorGuidelines" target="_blank" rel="noopener" class="btn-link">🌐 Buka Panduan Lengkap</a>
                     </div>
                 </div>
                 <div class="carousel-dots" id="carouselDots">
@@ -302,8 +309,8 @@
                     <button class="carousel-dot" data-slide="2" aria-label="Slide 3"></button>
                 </div>
                 <div class="carousel-arrows">
-                    <button class="carousel-arrow" id="carouselPrev" aria-label="Slide sebelumnya">❮</button>
-                    <button class="carousel-arrow" id="carouselNext" aria-label="Slide berikutnya">❯</button>
+                    <button class="carousel-arrow" id="carouselPrev">❮</button>
+                    <button class="carousel-arrow" id="carouselNext">❯</button>
                 </div>
             </div>
 
@@ -363,30 +370,12 @@
                         <label for="judulArtikel">Judul Artikel <span class="optional">(opsional)</span></label>
                         <input type="text" id="judulArtikel" name="judulArtikel" placeholder="Judul lengkap artikel" />
                     </div>
-                    <div class="form-group">
-                        <label for="pendahuluan">Pendahuluan <span class="optional">(opsional)</span></label>
-                        <textarea id="pendahuluan" name="pendahuluan" class="medium" placeholder="Tulis pendahuluan / latar belakang..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="metodologi">Metodologi <span class="optional">(opsional)</span></label>
-                        <textarea id="metodologi" name="metodologi" class="medium" placeholder="Jelaskan metode..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="hasil">Hasil <span class="optional">(opsional)</span></label>
-                        <textarea id="hasil" name="hasil" class="medium" placeholder="Paparkan hasil..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="simpulan">Simpulan <span class="optional">(opsional)</span></label>
-                        <textarea id="simpulan" name="simpulan" class="medium" placeholder="Tulis kesimpulan..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="saran">Saran <span class="optional">(opsional)</span></label>
-                        <textarea id="saran" name="saran" class="small" placeholder="Saran untuk penelitian selanjutnya"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="daftarPustaka">Daftar Pustaka <span class="optional">(opsional)</span></label>
-                        <textarea id="daftarPustaka" name="daftarPustaka" class="large" placeholder="Daftar pustaka sesuai format..."></textarea>
-                    </div>
+                    <div class="form-group"><label for="pendahuluan">Pendahuluan <span class="optional">(opsional)</span></label><textarea id="pendahuluan" class="medium" placeholder="Tulis pendahuluan..."></textarea></div>
+                    <div class="form-group"><label for="metodologi">Metodologi <span class="optional">(opsional)</span></label><textarea id="metodologi" class="medium" placeholder="Jelaskan metode..."></textarea></div>
+                    <div class="form-group"><label for="hasil">Hasil <span class="optional">(opsional)</span></label><textarea id="hasil" class="medium" placeholder="Paparkan hasil..."></textarea></div>
+                    <div class="form-group"><label for="simpulan">Simpulan <span class="optional">(opsional)</span></label><textarea id="simpulan" class="medium" placeholder="Tulis kesimpulan..."></textarea></div>
+                    <div class="form-group"><label for="saran">Saran <span class="optional">(opsional)</span></label><textarea id="saran" class="small" placeholder="Saran untuk penelitian selanjutnya"></textarea></div>
+                    <div class="form-group"><label for="daftarPustaka">Daftar Pustaka <span class="optional">(opsional)</span></label><textarea id="daftarPustaka" class="large" placeholder="Daftar pustaka sesuai format..."></textarea></div>
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary" id="step2Prev">← Kembali</button>
                         <button type="button" class="btn btn-primary" id="step2Next">Lanjut →</button>
@@ -397,23 +386,11 @@
                 <div class="form-section" data-section="3" role="tabpanel" aria-label="Abstrak">
                     <h2 class="section-title"><span class="step-num">3</span> Abstrak &amp; Kata Kunci</h2>
                     <p class="section-sub">Isi abstrak dalam dua bahasa (opsional).</p>
-                    <div class="form-group">
-                        <label for="abstractEn">Abstract (English) <span class="optional">(opsional)</span></label>
-                        <textarea id="abstractEn" name="abstractEn" class="medium" placeholder="Write the abstract in English..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="keywordEn">Keywords (English) <span class="optional">(opsional)</span></label>
-                        <input type="text" id="keywordEn" name="keywordEn" placeholder="keyword1, keyword2, keyword3" />
-                    </div>
-                    <hr class="section-divider" />
-                    <div class="form-group">
-                        <label for="abstrakId">Abstrak (Indonesia) <span class="optional">(opsional)</span></label>
-                        <textarea id="abstrakId" name="abstrakId" class="medium" placeholder="Tulis abstrak dalam bahasa Indonesia..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="keywordId">Kata Kunci (Indonesia) <span class="optional">(opsional)</span></label>
-                        <input type="text" id="keywordId" name="keywordId" placeholder="kata1, kata2, kata3" />
-                    </div>
+                    <div class="form-group"><label for="abstractEn">Abstract (English) <span class="optional">(opsional)</span></label><textarea id="abstractEn" class="medium" placeholder="Write abstract..."></textarea></div>
+                    <div class="form-group"><label for="keywordEn">Keywords (English) <span class="optional">(opsional)</span></label><input type="text" id="keywordEn" placeholder="keyword1, keyword2" /></div>
+                    <hr class="section-divider">
+                    <div class="form-group"><label for="abstrakId">Abstrak (Indonesia) <span class="optional">(opsional)</span></label><textarea id="abstrakId" class="medium" placeholder="Tulis abstrak..."></textarea></div>
+                    <div class="form-group"><label for="keywordId">Kata Kunci (Indonesia) <span class="optional">(opsional)</span></label><input type="text" id="keywordId" placeholder="kata1, kata2" /></div>
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary" id="step3Prev">← Kembali</button>
                         <button type="button" class="btn btn-primary" id="step3Next">Lanjut →</button>
@@ -506,19 +483,10 @@
                     <hr class="section-divider" />
 
                     <div class="form-row">
-                        <div class="form-group">
-                            <label for="namaJurnal">Nama Jurnal <span class="optional">(opsional)</span></label>
-                            <input type="text" id="namaJurnal" name="namaJurnal" placeholder="Nama jurnal tujuan" />
-                        </div>
-                        <div class="form-group">
-                            <label for="linkJurnal">Link Jurnal <span class="optional">(opsional)</span></label>
-                            <input type="url" id="linkJurnal" name="linkJurnal" placeholder="https://jurnal.ac.id/..." />
-                        </div>
+                        <div class="form-group"><label for="namaJurnal">Nama Jurnal <span class="optional">(opsional)</span></label><input type="text" id="namaJurnal" placeholder="Nama jurnal tujuan" /></div>
+                        <div class="form-group"><label for="linkJurnal">Link Jurnal <span class="optional">(opsional)</span></label><input type="url" id="linkJurnal" placeholder="https://jurnal.ac.id/..." /></div>
                     </div>
-                    <div class="form-group">
-                        <label for="linkSinta">Link SINTA / Akreditasi <span class="optional">(opsional)</span></label>
-                        <input type="url" id="linkSinta" name="linkSinta" placeholder="https://sinta.kemdikbud.go.id/..." />
-                    </div>
+                    <div class="form-group"><label for="linkSinta">Link SINTA / Akreditasi <span class="optional">(opsional)</span></label><input type="url" id="linkSinta" placeholder="https://sinta.kemdikbud.go.id/..." /></div>
 
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary" id="step4Prev">← Kembali</button>
@@ -533,14 +501,12 @@
             <!-- Success Result -->
             <div id="resultContainer" class="hidden">
                 <div class="result-box">
-                    <span class="big-icon" aria-hidden="true">🎉</span>
+                    <span class="big-icon">🎉</span>
                     <h2>Registrasi Berhasil!</h2>
                     <p>Artikel Anda telah terdaftar dengan nomor:</p>
                     <div class="reg-id" id="resultRegId">REG-2026-0001</div>
                     <div class="status-badge">📌 Status: Submit</div>
-                    <div class="qr-container">
-                        <img id="resultQrCode" src="" alt="QR Code registrasi" style="display:none;" />
-                    </div>
+                    <div class="qr-container"><img id="resultQrCode" src="" alt="QR Code" style="display:none;" /></div>
                     <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Simpan nomor registrasi ini untuk melacak status artikel Anda.</p>
                     <button type="button" class="btn btn-outline" id="resetBtn" style="margin-top:16px;">🔄 Submit Artikel Lain</button>
                 </div>
@@ -557,25 +523,20 @@
         <div class="preview-modal-content">
             <div class="preview-modal-header">
                 <span class="preview-modal-title" id="previewModalTitle">📄 Preview File</span>
-                <button class="preview-modal-close" id="previewModalClose" aria-label="Tutup preview">&times;</button>
+                <button class="preview-modal-close" id="previewModalClose">&times;</button>
             </div>
             <div class="preview-item" id="previewContainer"></div>
         </div>
     </div>
 
-    <!-- JavaScript Lengkap & Final -->
+    <!-- JAVASCRIPT -->
     <script>
         (function() {
             'use strict';
 
-            // =====================================================
-            // KONFIGURASI
-            // =====================================================
             const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcMJ1g0XCjdQc5DHPjYXTm6iDT9HB_k6dFYO7hQZQQp8ZyZlrKal5yMMV6cVhsa0DoTg/exec";
 
-            // =====================================================
-            // DOM REFS
-            // =====================================================
+            // DOM Refs
             const form = document.getElementById('mainForm');
             const sections = document.querySelectorAll('.form-section');
             const dots = document.querySelectorAll('.step-dot');
@@ -599,50 +560,6 @@
             let currentSlide = 0;
             let autoPlayInterval;
 
-            // Preview Modal
-            const previewModal = document.getElementById('previewModal');
-            const previewModalTitle = document.getElementById('previewModalTitle');
-            const previewContainer = document.getElementById('previewContainer');
-            const previewModalClose = document.getElementById('previewModalClose');
-
-            // File data & config
-            const fileData = { artikel: null, bukti: null, loa: null };
-            const fileInputs = {
-                artikel: {
-                    input: document.getElementById('fileArtikel'),
-                    preview: document.getElementById('previewArtikel'),
-                    name: document.getElementById('previewArtikelName'),
-                    size: document.getElementById('previewArtikelSize'),
-                    remove: document.getElementById('removeArtikel'),
-                    drop: document.getElementById('dropArtikel'),
-                    helper: document.getElementById('fileArtikelHelper'),
-                    previewBtn: document.querySelector('[data-file-key="artikel"]')
-                },
-                bukti: {
-                    input: document.getElementById('fileBukti'),
-                    preview: document.getElementById('previewBukti'),
-                    name: document.getElementById('previewBuktiName'),
-                    size: document.getElementById('previewBuktiSize'),
-                    remove: document.getElementById('removeBukti'),
-                    drop: document.getElementById('dropBukti'),
-                    helper: document.getElementById('fileBuktiHelper'),
-                    previewBtn: document.querySelector('[data-file-key="bukti"]')
-                },
-                loa: {
-                    input: document.getElementById('fileLoa'),
-                    preview: document.getElementById('previewLoa'),
-                    name: document.getElementById('previewLoaName'),
-                    size: document.getElementById('previewLoaSize'),
-                    remove: document.getElementById('removeLoa'),
-                    drop: document.getElementById('dropLoa'),
-                    helper: document.getElementById('fileLoaHelper'),
-                    previewBtn: document.querySelector('[data-file-key="loa"]')
-                }
-            };
-
-            // =====================================================
-            // CAROUSEL
-            // =====================================================
             function goToSlide(index) {
                 if (index < 0) index = slideCount - 1;
                 if (index >= slideCount) index = 0;
@@ -650,16 +567,13 @@
                 carouselSlides.style.transform = `translateX(-${currentSlide * 100}%)`;
                 document.querySelectorAll('.carousel-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
             }
-
             function startAutoPlay() {
                 stopAutoPlay();
                 autoPlayInterval = setInterval(() => goToSlide(currentSlide + 1), 6000);
             }
-
             function stopAutoPlay() {
                 if (autoPlayInterval) { clearInterval(autoPlayInterval); autoPlayInterval = null; }
             }
-
             prevBtn.addEventListener('click', () => { goToSlide(currentSlide - 1); stopAutoPlay(); startAutoPlay(); });
             nextBtn.addEventListener('click', () => { goToSlide(currentSlide + 1); stopAutoPlay(); startAutoPlay(); });
             carouselDots.addEventListener('click', (e) => {
@@ -676,37 +590,57 @@
             carouselContainer.addEventListener('touchend', () => setTimeout(startAutoPlay, 3000));
             startAutoPlay();
 
-            // =====================================================
-            // MODAL PREVIEW
-            // =====================================================
+            // Modal Preview
+            const previewModal = document.getElementById('previewModal');
+            const previewModalTitle = document.getElementById('previewModalTitle');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewModalClose = document.getElementById('previewModalClose');
+
             function openPreviewModal(title) {
                 previewModalTitle.textContent = '📄 ' + title;
                 previewContainer.innerHTML = '';
                 previewModal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
-
             function closePreviewModal() {
                 previewModal.classList.add('hidden');
                 previewContainer.innerHTML = '';
                 document.body.style.overflow = '';
             }
-
             previewModalClose.addEventListener('click', closePreviewModal);
             previewModal.addEventListener('click', (e) => { if (e.target === previewModal) closePreviewModal(); });
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !previewModal.classList.contains('hidden')) closePreviewModal(); });
 
             function setPreviewLoading() {
-                previewContainer.innerHTML = '<div class="preview-loading"><div class="spinner"></div><span>Memuat preview...</span></div>';
+                previewContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;"><div class="spinner"></div><span>Memuat preview...</span></div>';
             }
-
             function setPreviewError(msg) {
-                previewContainer.innerHTML = `<div class="preview-error"><span class="error-icon">⚠️</span><strong>Gagal memuat preview</strong><p>${msg}</p></div>`;
+                previewContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--error);"><span style="font-size:3rem;">⚠️</span><p>${msg}</p></div>`;
             }
 
-            // =====================================================
-            // FILE UPLOAD & PREVIEW
-            // =====================================================
+            // File Handling (INPUT TIDAK PERNAH DI-HIDE)
+            const fileData = { artikel: null, bukti: null, loa: null };
+            const fileInputs = {
+                artikel: {
+                    input: document.getElementById('fileArtikel'), preview: document.getElementById('previewArtikel'),
+                    name: document.getElementById('previewArtikelName'), size: document.getElementById('previewArtikelSize'),
+                    remove: document.getElementById('removeArtikel'), drop: document.getElementById('dropArtikel'),
+                    helper: document.getElementById('fileArtikelHelper'), previewBtn: document.querySelector('[data-file-key="artikel"]')
+                },
+                bukti: {
+                    input: document.getElementById('fileBukti'), preview: document.getElementById('previewBukti'),
+                    name: document.getElementById('previewBuktiName'), size: document.getElementById('previewBuktiSize'),
+                    remove: document.getElementById('removeBukti'), drop: document.getElementById('dropBukti'),
+                    helper: document.getElementById('fileBuktiHelper'), previewBtn: document.querySelector('[data-file-key="bukti"]')
+                },
+                loa: {
+                    input: document.getElementById('fileLoa'), preview: document.getElementById('previewLoa'),
+                    name: document.getElementById('previewLoaName'), size: document.getElementById('previewLoaSize'),
+                    remove: document.getElementById('removeLoa'), drop: document.getElementById('dropLoa'),
+                    helper: document.getElementById('fileLoaHelper'), previewBtn: document.querySelector('[data-file-key="loa"]')
+                }
+            };
+
             function handleFileSelect(key, file) {
                 if (!file) return;
                 if (file.size > 10 * 1024 * 1024) {
@@ -715,23 +649,18 @@
                 }
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    fileData[key] = {
-                        data: e.target.result,
-                        mimeType: file.type,
-                        fileName: file.name,
-                        size: file.size
-                    };
+                    fileData[key] = { data: e.target.result, mimeType: file.type, fileName: file.name, size: file.size };
                     const cfg = fileInputs[key];
                     cfg.name.textContent = file.name;
                     cfg.size.textContent = formatFileSize(file.size);
                     cfg.preview.classList.add('show');
-                    cfg.input.style.display = 'none';
+                    // Input file tetap transparan di atas, tidak di-hide
                     cfg.drop.style.borderColor = 'var(--success)';
                     setHelper(cfg.helper.id, '✓ File siap — klik Preview', 'success');
                     const inputEl = document.getElementById(cfg.helper.id.replace('Helper',''));
                     if (inputEl) { inputEl.classList.remove('error'); inputEl.classList.add('success'); }
                 };
-                reader.onerror = () => showMessage('error', 'Gagal Membaca File', 'Terjadi kesalahan saat membaca file.');
+                reader.onerror = () => showMessage('error', 'Gagal Membaca File', 'Terjadi kesalahan.');
                 reader.readAsDataURL(file);
             }
 
@@ -739,8 +668,7 @@
                 fileData[key] = null;
                 const cfg = fileInputs[key];
                 cfg.preview.classList.remove('show');
-                cfg.input.style.display = 'block';
-                cfg.input.value = '';
+                cfg.input.value = ''; // reset input file
                 cfg.drop.style.borderColor = '';
                 const inputEl = document.getElementById(cfg.helper.id.replace('Helper',''));
                 if (inputEl) inputEl.classList.remove('success','error');
@@ -749,8 +677,12 @@
 
             Object.keys(fileInputs).forEach(key => {
                 const cfg = fileInputs[key];
+                // Tidak ada lagi modifikasi display input file
                 cfg.drop.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('file-preview-btn') && !e.target.classList.contains('file-remove')) {
+                    // Jika klik pada tombol preview/remove, jangan buka dialog file
+                    if (e.target.classList.contains('file-preview-btn') || e.target.classList.contains('file-remove')) return;
+                    // Jika bukan input file (misal area drop), klik manual ke input
+                    if (e.target !== cfg.input) {
                         cfg.input.click();
                     }
                 });
@@ -770,13 +702,9 @@
                 if (cfg.previewBtn) {
                     cfg.previewBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const fileObj = fileData[key];
-                        if (!fileObj) {
-                            showMessage('error', 'Tidak Ada File', 'Silakan pilih file terlebih dahulu.');
-                            return;
-                        }
-                        openPreviewModal(fileObj.fileName || 'Preview');
-                        renderPreview(fileObj);
+                        if (!fileData[key]) { showMessage('error','Tidak Ada File','Silakan pilih file dahulu.'); return; }
+                        openPreviewModal(fileData[key].fileName || 'Preview');
+                        renderPreview(fileData[key]);
                     });
                 }
             });
@@ -797,10 +725,10 @@
                     } else if (mime === 'text/plain' || fileObj.fileName.toLowerCase().endsWith('.txt')) {
                         renderTXT(fileObj.data);
                     } else {
-                        setPreviewError('Format file tidak didukung untuk preview.');
+                        setPreviewError('Format tidak didukung.');
                     }
                 } catch (err) {
-                    console.error(err);
+                    console.warn(err);
                     setPreviewError(err.message);
                 }
             }
@@ -822,10 +750,11 @@
                 const raw = atob(b64.split(',')[1]);
                 const bytes = new Uint8Array(raw.length);
                 for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-                const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+                const loadingTask = pdfjsLib.getDocument({ data: bytes, disableAutoFetch: true, disableStream: true });
+                const pdf = await loadingTask.promise;
                 previewContainer.innerHTML = '';
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
                     const vp = page.getViewport({ scale: 1 });
                     const containerWidth = previewContainer.clientWidth - 40 || 600;
                     const scale = containerWidth / vp.width;
@@ -835,7 +764,7 @@
                     const ctx = canvas.getContext('2d');
                     await page.render({ canvasContext: ctx, viewport: sv }).promise;
                     const wrap = document.createElement('div'); wrap.className = 'pdf-page';
-                    const label = document.createElement('div'); label.className = 'page-label'; label.textContent = `Halaman ${i} dari ${pdf.numPages}`;
+                    const label = document.createElement('div'); label.className = 'page-label'; label.textContent = `Halaman ${pageNum} dari ${pdf.numPages}`;
                     wrap.appendChild(canvas); wrap.appendChild(label);
                     previewContainer.appendChild(wrap);
                 }
@@ -847,11 +776,8 @@
                 const bytes = new Uint8Array(raw.length);
                 for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
                 const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
-                // Mammoth menghasilkan HTML yang aman (hanya tag dasar), kita bisa set langsung
                 previewContainer.innerHTML = `<div class="docx-content">${result.value}</div>`;
-                if (!result.value || result.value.trim().length === 0) {
-                    setPreviewError('Dokumen DOCX kosong atau tidak dapat dibaca.');
-                }
+                if (!result.value || result.value.trim().length === 0) setPreviewError('Dokumen DOCX kosong.');
             }
 
             function renderImage(b64) {
@@ -865,20 +791,14 @@
 
             function renderTXT(b64) {
                 let text = '';
-                try {
-                    text = decodeURIComponent(escape(atob(b64.split(',')[1])));
-                } catch (e) {
-                    text = atob(b64.split(',')[1]) || '[Tidak dapat mendecode teks]';
-                }
+                try { text = decodeURIComponent(escape(atob(b64.split(',')[1]))); } catch(e) { text = atob(b64.split(',')[1]); }
                 const pre = document.createElement('pre');
-                pre.textContent = text; // aman, tidak ada HTML
+                pre.textContent = text;
                 previewContainer.innerHTML = '';
                 previewContainer.appendChild(pre);
             }
 
-            // =====================================================
-            // FORM STEP NAVIGATION
-            // =====================================================
+            // Step Navigation
             let currentStep = 1;
             const totalSteps = 4;
             let isSubmitting = false;
@@ -886,11 +806,8 @@
             function goToStep(step) {
                 if (step < 1 || step > totalSteps) return;
                 currentStep = step;
-                sections.forEach((s, i) => {
-                    s.classList.toggle('active', i+1 === step);
-                    s.setAttribute('aria-hidden', i+1 !== step);
-                });
-                dots.forEach((d, i) => {
+                sections.forEach((s,i) => { s.classList.toggle('active', i+1 === step); s.setAttribute('aria-hidden', i+1 !== step); });
+                dots.forEach((d,i) => {
                     const n = i+1;
                     d.classList.remove('active','completed');
                     if (n === step) d.classList.add('active');
@@ -901,116 +818,47 @@
                 hideMessage();
             }
 
-            // =====================================================
-            // VALIDATION
-            // =====================================================
+            // Validation
             function validateStep1() {
                 const nim = document.getElementById('nim').value.trim();
                 const email = document.getElementById('email').value.trim();
-                if (nim && !/^[0-9]{4}03[0-9]{3}$/.test(nim)) {
-                    setFieldError('nim', 'Format NIM tidak valid');
-                    return false;
-                } else if (nim) {
-                    setFieldSuccess('nim');
-                    setHelper('nimHelper', '✓ Format benar', 'success');
-                } else {
-                    document.getElementById('nim').classList.remove('success','error');
-                    setHelper('nimHelper', 'Format: 202303001');
-                }
-                if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                    setFieldError('email', 'Format email tidak valid');
-                    return false;
-                } else if (email) {
-                    setFieldSuccess('email');
-                } else {
-                    document.getElementById('email').classList.remove('success','error');
-                }
-                // Nama opsional
-                const nama = document.getElementById('namaLengkap').value.trim();
-                if (nama) setFieldSuccess('namaLengkap');
-                else document.getElementById('namaLengkap').classList.remove('success','error');
+                if (nim && !/^[0-9]{4}03[0-9]{3}$/.test(nim)) { setFieldError('nim','Format NIM tidak valid'); return false; }
+                else if (nim) { setFieldSuccess('nim'); setHelper('nimHelper','✓ Format benar','success'); }
+                else { document.getElementById('nim').classList.remove('success','error'); setHelper('nimHelper','Format: 202303001'); }
+                if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFieldError('email','Email tidak valid'); return false; }
+                else if (email) setFieldSuccess('email');
+                else document.getElementById('email').classList.remove('success','error');
                 return true;
             }
-
-            function validateStep2() { return true; } // semua opsional
-            function validateStep3() { return true; }
-
             function validateStep4() {
-                ['artikel','bukti','loa'].forEach(key => {
-                    const cfg = fileInputs[key];
-                    if (fileData[key]) {
-                        setFieldSuccess(cfg.helper.id.replace('Helper',''));
-                        setHelper(cfg.helper.id, '✓ File siap', 'success');
-                        cfg.drop.style.borderColor = 'var(--success)';
-                    } else {
-                        const inputEl = document.getElementById(cfg.helper.id.replace('Helper',''));
-                        if (inputEl) inputEl.classList.remove('success','error');
-                        setHelper(cfg.helper.id, '');
-                        cfg.drop.style.borderColor = '';
-                    }
-                });
                 const linkJ = document.getElementById('linkJurnal').value.trim();
-                if (linkJ && !linkJ.startsWith('http')) {
-                    setFieldError('linkJurnal', 'URL harus diawali http');
-                    return false;
-                }
+                if (linkJ && !linkJ.startsWith('http')) { setFieldError('linkJurnal','URL harus diawali http'); return false; }
                 const linkS = document.getElementById('linkSinta').value.trim();
-                if (linkS && !linkS.startsWith('http')) {
-                    setFieldError('linkSinta', 'URL harus diawali http');
-                    return false;
-                }
+                if (linkS && !linkS.startsWith('http')) { setFieldError('linkSinta','URL harus diawali http'); return false; }
                 return true;
             }
 
-            // =====================================================
-            // SUBMIT LOGIC
-            // =====================================================
-            async function submitWithRetry(data, maxRetries = 2) {
-                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            // Submit
+            async function submitWithRetry(data, max=2) {
+                for (let attempt=1; attempt<=max; attempt++) {
                     try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 30000);
-                        const formBody = new URLSearchParams({ payload: JSON.stringify(data) }).toString();
-                        const response = await fetch(APP_SCRIPT_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: formBody,
-                            signal: controller.signal,
-                            credentials: 'omit'
-                        });
-                        clearTimeout(timeoutId);
-                        if (!response.ok) {
-                            let errMsg = 'HTTP ' + response.status;
-                            try {
-                                const json = await response.json();
-                                if (json.error) errMsg = json.error;
-                            } catch (e) {
-                                const text = await response.text();
-                                if (text && text.length < 200) errMsg = text;
-                            }
-                            throw new Error(errMsg);
-                        }
-                        return await response.json();
-                    } catch (error) {
-                        if (attempt === maxRetries) throw error;
-                        console.warn(`Percobaan ${attempt} gagal, mencoba lagi...`);
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                    }
+                        const ctrl = new AbortController();
+                        const id = setTimeout(() => ctrl.abort(), 30000);
+                        const body = new URLSearchParams({ payload: JSON.stringify(data) }).toString();
+                        const res = await fetch(APP_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body, signal:ctrl.signal, credentials:'omit' });
+                        clearTimeout(id);
+                        if (!res.ok) throw new Error(await res.text() || 'HTTP '+res.status);
+                        return await res.json();
+                    } catch(e) { if (attempt===max) throw e; await new Promise(r => setTimeout(r, 2000)); }
                 }
             }
 
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (isSubmitting) return;
-                if (!validateStep4()) {
-                    showMessage('error', 'Validasi Gagal', 'Periksa kembali field yang ditandai.');
-                    return;
-                }
-
-                const hasData = document.getElementById('namaLengkap').value.trim() ||
-                                document.getElementById('judulArtikel').value.trim() ||
-                                fileData.artikel || fileData.bukti || fileData.loa;
-                if (!hasData && !confirm('Anda belum mengisi data apapun. Tetap submit?')) return;
+                if (!validateStep4()) { showMessage('error','Validasi Gagal','Periksa field yang ditandai.'); return; }
+                const hasData = document.getElementById('namaLengkap').value.trim() || document.getElementById('judulArtikel').value.trim() || fileData.artikel || fileData.bukti || fileData.loa;
+                if (!hasData && !confirm('Tidak ada data diisi. Tetap submit?')) return;
 
                 const payload = {
                     namaLengkap: document.getElementById('namaLengkap').value.trim(),
@@ -1045,120 +893,70 @@
                     isSubmitting = false;
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('loading');
-
                     if (result && result.success) {
                         form.style.display = 'none';
                         resultContainer.classList.remove('hidden');
                         resultRegId.textContent = result.regId;
-                        if (result.qrCode) {
-                            resultQrCode.src = result.qrCode;
-                            resultQrCode.style.display = 'block';
-                        }
+                        if (result.qrCode) { resultQrCode.src = result.qrCode; resultQrCode.style.display = 'block'; }
                         resultContainer.scrollIntoView({ behavior:'smooth', block:'center' });
-                        showMessage('success', '✅ Registrasi Berhasil!', 'Artikel berhasil terdaftar.');
-                    } else {
-                        showMessage('error', 'Gagal Menyimpan', result.error || 'Terjadi kesalahan.');
-                    }
-                } catch (error) {
+                        showMessage('success','✅ Registrasi Berhasil!','Artikel berhasil terdaftar.');
+                    } else showMessage('error','Gagal Menyimpan', result.error || 'Error.');
+                } catch(err) {
                     isSubmitting = false;
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('loading');
-                    showMessage('error', 'Error', error.message);
+                    showMessage('error','Error', err.message);
                 }
             });
 
-            // =====================================================
-            // RESET
-            // =====================================================
-            resetBtn.addEventListener('click', () => {
-                form.reset();
-                form.style.display = 'block';
-                resultContainer.classList.add('hidden');
-                hideMessage();
-                Object.keys(fileData).forEach(k => { fileData[k] = null; handleFileRemove(k); });
-                document.querySelectorAll('.form-group input, .form-group textarea').forEach(el => el.classList.remove('success','error'));
-                document.querySelectorAll('.helper').forEach(el => { el.textContent = ''; el.className = 'helper'; });
-                goToStep(1);
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('loading');
-                isSubmitting = false;
-                Object.values(fileInputs).forEach(cfg => { cfg.drop.style.borderColor = ''; cfg.input.style.display = 'block'; });
+            // Reset
+            resetBtn.addEventListener('click', ()=>{
+                form.reset(); form.style.display = 'block'; resultContainer.classList.add('hidden');
+                Object.keys(fileData).forEach(k => { fileData[k]=null; handleFileRemove(k); });
+                document.querySelectorAll('.form-group input,.form-group textarea').forEach(el => el.classList.remove('success','error'));
+                document.querySelectorAll('.helper').forEach(el => { el.textContent=''; el.className='helper'; });
+                goToStep(1); submitBtn.disabled=false; submitBtn.classList.remove('loading'); isSubmitting=false;
+                Object.values(fileInputs).forEach(cfg => { cfg.drop.style.borderColor=''; });
                 closePreviewModal();
-                showMessage('info', 'Formulir Direset', 'Silakan isi kembali.');
+                showMessage('info','Formulir Direset','Silakan isi kembali.');
             });
 
-            // =====================================================
-            // HELPERS
-            // =====================================================
+            // Helpers
             function showMessage(type, title, text) {
                 messageBox.className = 'message-box show ' + type;
-                msgIcon.textContent = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-                msgTitle.textContent = title;
-                msgText.textContent = text;
-                if (type === 'info' || type === 'success') {
-                    clearTimeout(window.messageTimeout);
-                    window.messageTimeout = setTimeout(() => { if (messageBox.classList.contains('show')) hideMessage(); }, 8000);
-                }
+                msgIcon.textContent = type==='success'?'✅':type==='error'?'❌':'ℹ️';
+                msgTitle.textContent = title; msgText.textContent = text;
+                if (type==='info'||type==='success') { clearTimeout(window.messageTimeout); window.messageTimeout = setTimeout(()=>{ if (messageBox.classList.contains('show')) hideMessage(); }, 8000); }
             }
             function hideMessage() { messageBox.className = 'message-box'; clearTimeout(window.messageTimeout); }
-            function setHelper(id, msg, type) {
-                const el = document.getElementById(id);
-                if (el) { el.textContent = msg || ''; el.className = 'helper' + (type ? ' ' + type : ''); }
-            }
-            function setFieldError(id, msg) {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.classList.add('error'); el.classList.remove('success');
-                setHelper(id+'Helper', msg, 'error');
-            }
-            function setFieldSuccess(id) {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.classList.remove('error'); el.classList.add('success');
-                setHelper(id+'Helper', '✓', 'success');
-            }
-            function formatFileSize(bytes) {
-                if (bytes < 1024) return bytes + ' B';
-                if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-                return (bytes / 1048576).toFixed(1) + ' MB';
-            }
+            function setHelper(id, msg, type) { const el = document.getElementById(id); if(el){ el.textContent=msg||''; el.className='helper'+(type?' '+type:''); } }
+            function setFieldError(id, msg) { const el=document.getElementById(id); if(el){ el.classList.add('error'); el.classList.remove('success'); setHelper(id+'Helper',msg,'error'); } }
+            function setFieldSuccess(id) { const el=document.getElementById(id); if(el){ el.classList.remove('error'); el.classList.add('success'); setHelper(id+'Helper','✓','success'); } }
+            function formatFileSize(b) { if(b<1024)return b+' B'; if(b<1048576)return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
 
-            // Navigation buttons
-            document.getElementById('step1Next').addEventListener('click', () => { if (validateStep1()) goToStep(2); });
+            document.getElementById('step1Next').addEventListener('click', () => { if(validateStep1()) goToStep(2); });
             document.getElementById('step2Prev').addEventListener('click', () => goToStep(1));
             document.getElementById('step2Next').addEventListener('click', () => goToStep(3));
             document.getElementById('step3Prev').addEventListener('click', () => goToStep(2));
             document.getElementById('step3Next').addEventListener('click', () => goToStep(4));
             document.getElementById('step4Prev').addEventListener('click', () => goToStep(3));
 
-            // Footer year
             document.getElementById('footerYear').textContent = new Date().getFullYear();
-
-            // Initial step
             goToStep(1);
 
-            // Live validation on blur
+            // Live validation
             document.querySelectorAll('input, textarea').forEach(el => {
                 el.addEventListener('blur', function() {
-                    const id = this.id;
-                    const val = this.value.trim();
-                    if (!val) { this.classList.remove('success','error'); setHelper(id+'Helper',''); return; }
-                    if (id === 'nim') {
-                        if (!/^[0-9]{4}03[0-9]{3}$/.test(val)) setFieldError(id, 'Format NIM tidak valid');
-                        else setFieldSuccess(id);
-                    } else if (id === 'email') {
-                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) setFieldError(id, 'Email tidak valid');
-                        else setFieldSuccess(id);
-                    } else if (id === 'linkJurnal' || id === 'linkSinta') {
-                        if (!val.startsWith('http')) setFieldError(id, 'Harus diawali http');
-                        else setFieldSuccess(id);
-                    } else {
-                        setFieldSuccess(id);
-                    }
+                    const id=this.id, val=this.value.trim();
+                    if(!val) { this.classList.remove('success','error'); setHelper(id+'Helper',''); return; }
+                    if(id==='nim') { if(!/^[0-9]{4}03[0-9]{3}$/.test(val)) setFieldError(id,'Format NIM salah'); else setFieldSuccess(id); }
+                    else if(id==='email') { if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) setFieldError(id,'Email tidak valid'); else setFieldSuccess(id); }
+                    else if(id==='linkJurnal'||id==='linkSinta') { if(!val.startsWith('http')) setFieldError(id,'Harus diawali http'); else setFieldSuccess(id); }
+                    else setFieldSuccess(id);
                 });
             });
 
-            console.log('✅ Form siap. Carousel di atas, semua fungsi lengkap & aman.');
+            console.log('✅ Form siap. Klik upload selalu 1x, tanpa bug.');
         })();
     </script>
 </body>
