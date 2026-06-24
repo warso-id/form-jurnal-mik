@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>Monitoring Publikasi Jurnal</title>
 
-    <!-- ========== PDF.js Library ========== -->
+    <!-- PDF.js & Mammoth.js (crossorigin aman) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
             crossorigin="anonymous"
             referrerpolicy="no-referrer">
     </script>
-
-    <!-- ========== Mammoth.js (untuk DOCX) ========== -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"
             crossorigin="anonymous"
             referrerpolicy="no-referrer">
@@ -178,7 +176,7 @@
         .file-upload-area .sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
         .file-upload-area .file-types { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; background: var(--bg); padding: 2px 12px; border-radius: 12px; display: inline-block; }
 
-        /* ❗ INPUT FILE: transparan selalu, TIDAK PERNAH di-hide */
+        /* INPUT FILE: transparan, tidak pernah hidden */
         .file-upload-area input[type="file"] {
             position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
         }
@@ -262,7 +260,27 @@
         .preview-item .pdf-page canvas { max-width: 100%; height: auto; }
         .preview-item img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
         .preview-item pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; background: #fff; padding: 20px; border-radius: var(--radius-xs); }
-        .preview-item .docx-content { background: #fff; padding: 30px; border-radius: var(--radius-xs); max-width: 800px; margin: 0 auto; line-height: 1.7; }
+
+        /* Style DOCX */
+        .preview-item .docx-content {
+            background: #fff; padding: 40px 50px; border-radius: 4px;
+            max-width: 800px; margin: 0 auto; line-height: 1.5;
+            font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000;
+            word-wrap: break-word; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+        .preview-item .docx-content h1 { font-size: 16pt; font-weight: bold; margin: 12pt 0 6pt; }
+        .preview-item .docx-content h2 { font-size: 14pt; font-weight: bold; margin: 10pt 0 4pt; }
+        .preview-item .docx-content h3 { font-size: 12pt; font-weight: bold; margin: 8pt 0 4pt; }
+        .preview-item .docx-content p { margin: 0 0 6pt 0; text-align: left; }
+        .preview-item .docx-content ul, .preview-item .docx-content ol { margin: 6pt 0 6pt 24pt; padding-left: 0; }
+        .preview-item .docx-content li { margin-bottom: 2pt; }
+        .preview-item .docx-content table { border-collapse: collapse; width: 100%; margin: 10pt 0; }
+        .preview-item .docx-content td, .preview-item .docx-content th { border: 1px solid #000; padding: 4pt 8pt; vertical-align: top; }
+        .preview-item .docx-content th { background-color: #f0f0f0; font-weight: bold; }
+        .preview-item .docx-content img { max-width: 100%; height: auto; display: block; margin: 6pt 0; }
+        .preview-item .docx-content b, .preview-item .docx-content strong { font-weight: bold; }
+        .preview-item .docx-content i, .preview-item .docx-content em { font-style: italic; }
+        .preview-item .docx-content u { text-decoration: underline; }
     </style>
 </head>
 
@@ -498,16 +516,18 @@
                 </div>
             </form>
 
-            <!-- Success Result -->
+            <!-- Success Result (tampil segera setelah submit) -->
             <div id="resultContainer" class="hidden">
                 <div class="result-box">
                     <span class="big-icon">🎉</span>
                     <h2>Registrasi Berhasil!</h2>
-                    <p>Artikel Anda telah terdaftar dengan nomor:</p>
-                    <div class="reg-id" id="resultRegId">REG-2026-0001</div>
-                    <div class="status-badge">📌 Status: Submit</div>
+                    <p id="resultMessage">Artikel Anda sedang didaftarkan...</p>
+                    <div class="reg-id" id="resultRegId">REG-2026-0000</div>
+                    <div class="status-badge" id="resultStatus">📌 Menghubungi server...</div>
                     <div class="qr-container"><img id="resultQrCode" src="" alt="QR Code" style="display:none;" /></div>
-                    <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;">Simpan nomor registrasi ini untuk melacak status artikel Anda.</p>
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px;" id="resultNote">
+                        Menyimpan data... mohon tunggu sebentar.
+                    </p>
                     <button type="button" class="btn btn-outline" id="resetBtn" style="margin-top:16px;">🔄 Submit Artikel Lain</button>
                 </div>
             </div>
@@ -529,7 +549,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
+    <!-- JAVASCRIPT (OPTIMISTIC UI SUBMIT) -->
     <script>
         (function() {
             'use strict';
@@ -618,7 +638,7 @@
                 previewContainer.innerHTML = `<div style="text-align:center;padding:40px;color:var(--error);"><span style="font-size:3rem;">⚠️</span><p>${msg}</p></div>`;
             }
 
-            // File Handling (INPUT TIDAK PERNAH DI-HIDE)
+            // File Handling
             const fileData = { artikel: null, bukti: null, loa: null };
             const fileInputs = {
                 artikel: {
@@ -654,7 +674,6 @@
                     cfg.name.textContent = file.name;
                     cfg.size.textContent = formatFileSize(file.size);
                     cfg.preview.classList.add('show');
-                    // Input file tetap transparan di atas, tidak di-hide
                     cfg.drop.style.borderColor = 'var(--success)';
                     setHelper(cfg.helper.id, '✓ File siap — klik Preview', 'success');
                     const inputEl = document.getElementById(cfg.helper.id.replace('Helper',''));
@@ -668,7 +687,7 @@
                 fileData[key] = null;
                 const cfg = fileInputs[key];
                 cfg.preview.classList.remove('show');
-                cfg.input.value = ''; // reset input file
+                cfg.input.value = '';
                 cfg.drop.style.borderColor = '';
                 const inputEl = document.getElementById(cfg.helper.id.replace('Helper',''));
                 if (inputEl) inputEl.classList.remove('success','error');
@@ -677,14 +696,9 @@
 
             Object.keys(fileInputs).forEach(key => {
                 const cfg = fileInputs[key];
-                // Tidak ada lagi modifikasi display input file
                 cfg.drop.addEventListener('click', (e) => {
-                    // Jika klik pada tombol preview/remove, jangan buka dialog file
                     if (e.target.classList.contains('file-preview-btn') || e.target.classList.contains('file-remove')) return;
-                    // Jika bukan input file (misal area drop), klik manual ke input
-                    if (e.target !== cfg.input) {
-                        cfg.input.click();
-                    }
+                    if (e.target !== cfg.input) cfg.input.click();
                 });
                 cfg.input.addEventListener('change', function() { if (this.files.length) handleFileSelect(key, this.files[0]); });
                 cfg.drop.addEventListener('dragover', e => { e.preventDefault(); cfg.drop.classList.add('dragover'); });
@@ -720,6 +734,8 @@
                     } else if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
                                fileObj.fileName.toLowerCase().endsWith('.docx')) {
                         await renderDOCX(fileObj.data);
+                    } else if (mime === 'application/msword' || fileObj.fileName.toLowerCase().endsWith('.doc')) {
+                        setPreviewError('File .DOC (format lama) tidak dapat dipreview. Silakan konversi ke .DOCX atau .PDF.');
                     } else if (mime.startsWith('image/')) {
                         renderImage(fileObj.data);
                     } else if (mime === 'text/plain' || fileObj.fileName.toLowerCase().endsWith('.txt')) {
@@ -775,9 +791,40 @@
                 const raw = atob(b64.split(',')[1]);
                 const bytes = new Uint8Array(raw.length);
                 for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-                const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
-                previewContainer.innerHTML = `<div class="docx-content">${result.value}</div>`;
-                if (!result.value || result.value.trim().length === 0) setPreviewError('Dokumen DOCX kosong.');
+                const options = {
+                    styleMap: [
+                        "p[style-name='Heading 1'] => h1:fresh",
+                        "p[style-name='Heading 2'] => h2:fresh",
+                        "p[style-name='Heading 3'] => h3:fresh",
+                        "p[style-name='Heading 4'] => h4:fresh",
+                        "p[style-name='Title'] => h1.title:fresh",
+                        "p[style-name='Subtitle'] => h2.subtitle:fresh",
+                        "r[style-name='Strong'] => strong",
+                        "r[style-name='Emphasis'] => em",
+                        "p[style-name='List Paragraph'] => p.list-paragraph:fresh",
+                        "p[style-name='Normal'] => p:fresh"
+                    ]
+                };
+                const result = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer }, options);
+                const html = result.value;
+                if (!html || html.trim().length === 0) {
+                    setPreviewError('Dokumen DOCX kosong.');
+                    return;
+                }
+                previewContainer.innerHTML = `<div class="docx-content">${html}</div>`;
+                const docxDiv = previewContainer.querySelector('.docx-content');
+                if (docxDiv) {
+                    docxDiv.querySelectorAll('img').forEach(img => { img.style.maxWidth = '100%'; img.style.height = 'auto'; });
+                    docxDiv.querySelectorAll('table').forEach(table => {
+                        table.style.borderCollapse = 'collapse';
+                        table.style.width = '100%';
+                        table.querySelectorAll('td, th').forEach(cell => {
+                            cell.style.border = '1px solid #000';
+                            cell.style.padding = '4pt 8pt';
+                            cell.style.verticalAlign = 'top';
+                        });
+                    });
+                }
             }
 
             function renderImage(b64) {
@@ -838,25 +885,39 @@
                 return true;
             }
 
-            // Submit
-            async function submitWithRetry(data, max=2) {
-                for (let attempt=1; attempt<=max; attempt++) {
-                    try {
-                        const ctrl = new AbortController();
-                        const id = setTimeout(() => ctrl.abort(), 30000);
-                        const body = new URLSearchParams({ payload: JSON.stringify(data) }).toString();
-                        const res = await fetch(APP_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body, signal:ctrl.signal, credentials:'omit' });
-                        clearTimeout(id);
-                        if (!res.ok) throw new Error(await res.text() || 'HTTP '+res.status);
-                        return await res.json();
-                    } catch(e) { if (attempt===max) throw e; await new Promise(r => setTimeout(r, 2000)); }
+            // SUBMIT dengan Optimistic UI
+            async function quickSubmit(data) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                try {
+                    const formBody = new URLSearchParams({ payload: JSON.stringify(data) }).toString();
+                    const response = await fetch(APP_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formBody,
+                        signal: controller.signal,
+                        credentials: 'omit'
+                    });
+                    clearTimeout(timeoutId);
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(errText || 'HTTP ' + response.status);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    throw error;
                 }
             }
 
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (isSubmitting) return;
-                if (!validateStep4()) { showMessage('error','Validasi Gagal','Periksa field yang ditandai.'); return; }
+                if (!validateStep4()) {
+                    showMessage('error','Validasi Gagal','Periksa field yang ditandai.');
+                    return;
+                }
+
                 const hasData = document.getElementById('namaLengkap').value.trim() || document.getElementById('judulArtikel').value.trim() || fileData.artikel || fileData.bukti || fileData.loa;
                 if (!hasData && !confirm('Tidak ada data diisi. Tetap submit?')) return;
 
@@ -883,39 +944,65 @@
                     loa: fileData.loa
                 };
 
-                isSubmitting = true;
-                submitBtn.disabled = true;
-                submitBtn.classList.add('loading');
+                // --- TAMPILKAN SUKSES SEKETIKA ---
+                form.style.display = 'none';
+                resultContainer.classList.remove('hidden');
+                resultRegId.textContent = 'REG-' + new Date().getFullYear() + '-0000';
+                document.getElementById('resultMessage').textContent = 'Artikel Anda sedang diproses...';
+                document.getElementById('resultStatus').textContent = '📌 Mengirim data...';
+                document.getElementById('resultNote').textContent = 'Menyimpan data, mohon tunggu.';
+                resultQrCode.style.display = 'none';
+                resultContainer.scrollIntoView({ behavior:'smooth', block:'center' });
                 hideMessage();
 
-                try {
-                    const result = await submitWithRetry(payload);
-                    isSubmitting = false;
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('loading');
-                    if (result && result.success) {
-                        form.style.display = 'none';
-                        resultContainer.classList.remove('hidden');
-                        resultRegId.textContent = result.regId;
-                        if (result.qrCode) { resultQrCode.src = result.qrCode; resultQrCode.style.display = 'block'; }
-                        resultContainer.scrollIntoView({ behavior:'smooth', block:'center' });
-                        showMessage('success','✅ Registrasi Berhasil!','Artikel berhasil terdaftar.');
-                    } else showMessage('error','Gagal Menyimpan', result.error || 'Error.');
-                } catch(err) {
-                    isSubmitting = false;
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('loading');
-                    showMessage('error','Error', err.message);
-                }
+                // --- KIRIM DATA DI BACKGROUND ---
+                quickSubmit(payload)
+                    .then(result => {
+                        if (result && result.success) {
+                            resultRegId.textContent = result.regId;
+                            document.getElementById('resultMessage').textContent = 'Artikel Anda telah terdaftar dengan nomor:';
+                            document.getElementById('resultStatus').textContent = '📌 Status: Submit';
+                            document.getElementById('resultNote').textContent = 'Simpan nomor registrasi ini untuk melacak status artikel Anda.';
+                            if (result.qrCode) {
+                                resultQrCode.src = result.qrCode;
+                                resultQrCode.style.display = 'block';
+                            }
+                            showMessage('success','✅ Registrasi Berhasil!','Artikel berhasil terdaftar.');
+                        } else {
+                            // Server merespon error
+                            resultRegId.textContent = 'ERROR';
+                            document.getElementById('resultMessage').textContent = 'Gagal menyimpan data.';
+                            document.getElementById('resultStatus').textContent = '❌ Gagal';
+                            document.getElementById('resultNote').textContent = (result && result.error) ? result.error : 'Silakan coba lagi.';
+                            showMessage('error','Gagal', result.error || 'Terjadi kesalahan.');
+                        }
+                    })
+                    .catch(err => {
+                        resultRegId.textContent = 'ERROR';
+                        document.getElementById('resultMessage').textContent = 'Gagal menghubungi server.';
+                        document.getElementById('resultStatus').textContent = '❌ Koneksi gagal';
+                        document.getElementById('resultNote').textContent = err.message;
+                        showMessage('error','Koneksi Gagal', err.message);
+                    });
+
+                // Reset status submit agar bisa digunakan lagi setelah reset
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+                isSubmitting = false;
             });
 
             // Reset
             resetBtn.addEventListener('click', ()=>{
-                form.reset(); form.style.display = 'block'; resultContainer.classList.add('hidden');
+                form.reset();
+                form.style.display = 'block';
+                resultContainer.classList.add('hidden');
                 Object.keys(fileData).forEach(k => { fileData[k]=null; handleFileRemove(k); });
                 document.querySelectorAll('.form-group input,.form-group textarea').forEach(el => el.classList.remove('success','error'));
                 document.querySelectorAll('.helper').forEach(el => { el.textContent=''; el.className='helper'; });
-                goToStep(1); submitBtn.disabled=false; submitBtn.classList.remove('loading'); isSubmitting=false;
+                goToStep(1);
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+                isSubmitting = false;
                 Object.values(fileInputs).forEach(cfg => { cfg.drop.style.borderColor=''; });
                 closePreviewModal();
                 showMessage('info','Formulir Direset','Silakan isi kembali.');
@@ -944,7 +1031,7 @@
             document.getElementById('footerYear').textContent = new Date().getFullYear();
             goToStep(1);
 
-            // Live validation
+            // Blur validation
             document.querySelectorAll('input, textarea').forEach(el => {
                 el.addEventListener('blur', function() {
                     const id=this.id, val=this.value.trim();
@@ -956,7 +1043,7 @@
                 });
             });
 
-            console.log('✅ Form siap. Klik upload selalu 1x, tanpa bug.');
+            console.log('✅ Form siap dengan Optimistic UI. Submit terasa < 0.1 detik.');
         })();
     </script>
 </body>
